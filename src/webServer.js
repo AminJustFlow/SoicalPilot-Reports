@@ -651,9 +651,13 @@ function renderRoutesPage() {
 
       els.folderModalTitle.textContent = 'Select Dropbox Folder';
       const locationLabel = state.backend === 'dropbox_api' ? 'Dropbox path' : 'Absolute';
+      const warningHtml = state.warning
+        ? '<br><span style="color:#c62828;">' + escapeHtml(state.warning) + '</span>'
+        : '';
       els.folderModalPath.innerHTML =
         'Current: <code>' + escapeHtml(state.dropboxFolder || '/') + '</code><br>' +
-        locationLabel + ': <code>' + escapeHtml(state.absolutePath || '') + '</code>';
+        locationLabel + ': <code>' + escapeHtml(state.absolutePath || '') + '</code>' +
+        warningHtml;
       els.folderModalUpBtn.disabled = !state.parentPath;
       els.folderModalList.innerHTML = '';
 

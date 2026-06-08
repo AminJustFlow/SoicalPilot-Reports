@@ -207,6 +207,11 @@ function isConflictError(error) {
   return body.includes('conflict');
 }
 
+function isDropboxPathNotFoundError(error) {
+  const body = JSON.stringify(error?.body || {});
+  return error?.status === 409 && body.includes('path/not_found');
+}
+
 async function createFolderIfMissing({ accessToken, folderPath }) {
   try {
     await dropboxRpcRequest({
@@ -375,12 +380,26 @@ async function continueDropboxFolderListing({ accessToken, cursor }) {
 }
 
 async function listDropboxFolders({ accessToken, folderPath }) {
-  const normalizedFolder = normalizeDropboxPath(folderPath);
+  const requestedFolder = normalizeDropboxPath(folderPath);
+  let normalizedFolder = requestedFolder;
   const entries = [];
-  let page = await listDropboxFolderPage({
-    accessToken,
-    folderPath: normalizedFolder
-  });
+  let page;
+
+  while (true) {
+    try {
+      page = await listDropboxFolderPage({
+        accessToken,
+        folderPath: normalizedFolder
+      });
+      break;
+    } catch (error) {
+      const parentPath = getParentDropboxPath(normalizedFolder);
+      if (!isDropboxPathNotFoundError(error) || !parentPath) {
+        throw error;
+      }
+      normalizedFolder = parentPath;
+    }
+  }
 
   entries.push(...(Array.isArray(page.entries) ? page.entries : []));
 
@@ -409,6 +428,10 @@ async function listDropboxFolders({ accessToken, folderPath }) {
     localRoot: null,
     absolutePath: normalizedFolder,
     dropboxFolder: normalizedFolder,
+    requestedPath: requestedFolder,
+    warning: requestedFolder !== normalizedFolder
+      ? `Requested path ${requestedFolder} was not found. Showing ${normalizedFolder} instead.`
+      : null,
     parentPath: getParentDropboxPath(normalizedFolder),
     folders
   };
