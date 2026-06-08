@@ -40,7 +40,9 @@ async function fetchMicrosoftAccessToken({ oauth2, refreshToken, logger }) {
   }
 
   if (!response.ok) {
-    const error = new Error(`Microsoft token endpoint rejected request (${response.status})`);
+    const errorDescription = payload?.error_description || payload?.error || '';
+    const errorSuffix = errorDescription ? `: ${errorDescription}` : '';
+    const error = new Error(`Microsoft token endpoint rejected request (${response.status})${errorSuffix}`);
     error.authenticationFailed = response.status < 500;
     error.oauthError = payload?.error || null;
     error.oauthErrorDescription = payload?.error_description || null;
