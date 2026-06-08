@@ -46,6 +46,14 @@ function parseImportStartMode() {
   return raw;
 }
 
+function parseDropboxPathRootMode() {
+  const raw = process.env.DROPBOX_PATH_ROOT_MODE?.trim().toLowerCase() || 'auto';
+  if (!['auto', 'home', 'none', 'namespace_id'].includes(raw)) {
+    throw new Error(`DROPBOX_PATH_ROOT_MODE must be one of: auto, home, none, namespace_id. Received: ${raw}`);
+  }
+  return raw;
+}
+
 function parseSecretEnv(name) {
   const raw = String(process.env[name] || '').trim();
   if (!raw) return '';
@@ -173,6 +181,8 @@ export function loadConfig() {
   const dropboxRefreshToken = parseSecretEnv('DROPBOX_REFRESH_TOKEN');
   const dropboxAppKey = parseSecretEnv('DROPBOX_APP_KEY');
   const dropboxAppSecret = parseSecretEnv('DROPBOX_APP_SECRET');
+  const dropboxPathRootMode = parseDropboxPathRootMode();
+  const dropboxPathRootNamespaceId = String(process.env.DROPBOX_PATH_ROOT_NAMESPACE_ID || '').trim();
   if (dropboxRefreshToken.startsWith('sl.')) {
     throw new Error('DROPBOX_REFRESH_TOKEN looks like a short-lived Dropbox access token. Put this value in DROPBOX_ACCESS_TOKEN, or generate a real Dropbox refresh token.');
   }
@@ -180,6 +190,9 @@ export function loadConfig() {
   const uploadBackend = (process.env.UPLOAD_BACKEND?.trim().toLowerCase() || (hasDropboxApiCredentials ? 'dropbox_api' : 'local_fs'));
   if (!['dropbox_api', 'local_fs'].includes(uploadBackend)) {
     throw new Error(`UPLOAD_BACKEND must be one of: dropbox_api, local_fs. Received: ${uploadBackend}`);
+  }
+  if (uploadBackend === 'dropbox_api' && dropboxPathRootMode === 'namespace_id' && !dropboxPathRootNamespaceId) {
+    throw new Error('DROPBOX_PATH_ROOT_NAMESPACE_ID is required when DROPBOX_PATH_ROOT_MODE=namespace_id');
   }
 
   const localDropboxRootRaw = String(process.env.LOCAL_DROPBOX_ROOT || '').trim();
@@ -241,6 +254,8 @@ export function loadConfig() {
       refreshToken: dropboxRefreshToken || null,
       appKey: dropboxAppKey || null,
       appSecret: dropboxAppSecret || null,
+      pathRootMode: dropboxPathRootMode,
+      pathRootNamespaceId: dropboxPathRootNamespaceId || null,
       localRoot: localDropboxRoot,
       folderDefault: dropboxFolderDefault,
       bootstrapRoutes: parseBootstrapRoutes({

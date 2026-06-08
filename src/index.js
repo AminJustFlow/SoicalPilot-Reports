@@ -278,6 +278,8 @@ async function main() {
           appKey: config.dropbox.appKey,
           appSecret: config.dropbox.appSecret,
           refreshToken: config.dropbox.refreshToken,
+          pathRootMode: config.dropbox.pathRootMode,
+          pathRootNamespaceId: config.dropbox.pathRootNamespaceId,
           logger,
           retryConfig: config.retry
         });

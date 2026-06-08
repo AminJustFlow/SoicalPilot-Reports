@@ -176,13 +176,26 @@ function createAccessTokenProvider({ accessToken, appKey, appSecret, refreshToke
   };
 }
 
-async function dropboxRpcRequest({ accessToken, endpoint, body }) {
+function buildDropboxHeaders({ accessToken, contentType = 'application/json', pathRoot = null }) {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`
+  };
+
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+
+  if (pathRoot) {
+    headers['Dropbox-API-Path-Root'] = JSON.stringify(pathRoot);
+  }
+
+  return headers;
+}
+
+async function dropboxRpcRequest({ accessToken, endpoint, body, pathRoot = null }) {
   const response = await fetch(`https://api.dropboxapi.com/2/${endpoint}`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
+    headers: buildDropboxHeaders({ accessToken, pathRoot }),
     body: JSON.stringify(body)
   });
 
@@ -195,6 +208,71 @@ async function dropboxRpcRequest({ accessToken, endpoint, body }) {
   }
 
   return parsedBody;
+}
+
+async function getCurrentAccount({ accessToken }) {
+  return dropboxRpcRequest({
+    accessToken,
+    endpoint: 'users/get_current_account',
+    body: {}
+  });
+}
+
+function pathRootFromAccount(account) {
+  const rootInfo = account?.root_info || {};
+  const rootNamespaceId = rootInfo.root_namespace_id;
+  const homeNamespaceId = rootInfo.home_namespace_id;
+
+  if (!rootNamespaceId || rootNamespaceId === homeNamespaceId) {
+    return null;
+  }
+
+  return {
+    '.tag': 'root',
+    root: rootNamespaceId
+  };
+}
+
+function createPathRootProvider({ mode = 'auto', namespaceId = null, getAccessToken, logger }) {
+  let cachedPathRoot;
+  let hasResolved = false;
+
+  return async function getPathRoot({ forceRefresh = false } = {}) {
+    if (!forceRefresh && hasResolved) {
+      return cachedPathRoot;
+    }
+
+    if (mode === 'none') {
+      cachedPathRoot = null;
+    } else if (mode === 'home') {
+      cachedPathRoot = { '.tag': 'home' };
+    } else if (mode === 'namespace_id') {
+      if (!namespaceId) {
+        throw new Error('DROPBOX_PATH_ROOT_NAMESPACE_ID is required when DROPBOX_PATH_ROOT_MODE=namespace_id');
+      }
+      cachedPathRoot = {
+        '.tag': 'namespace_id',
+        namespace_id: namespaceId
+      };
+    } else {
+      const account = await getCurrentAccount({
+        accessToken: await getAccessToken({ forceRefresh })
+      });
+      cachedPathRoot = pathRootFromAccount(account);
+
+      logger.debug(
+        {
+          dropboxPathRootMode: cachedPathRoot?.['.tag'] || 'home',
+          rootNamespaceId: account?.root_info?.root_namespace_id || null,
+          homeNamespaceId: account?.root_info?.home_namespace_id || null
+        },
+        'Resolved Dropbox path root'
+      );
+    }
+
+    hasResolved = true;
+    return cachedPathRoot;
+  };
 }
 
 function isNotFoundError(error) {
@@ -212,10 +290,11 @@ function isDropboxPathNotFoundError(error) {
   return error?.status === 409 && body.includes('path/not_found');
 }
 
-async function createFolderIfMissing({ accessToken, folderPath }) {
+async function createFolderIfMissing({ accessToken, pathRoot, folderPath }) {
   try {
     await dropboxRpcRequest({
       accessToken,
+      pathRoot,
       endpoint: 'files/create_folder_v2',
       body: {
         path: folderPath,
@@ -230,7 +309,7 @@ async function createFolderIfMissing({ accessToken, folderPath }) {
   }
 }
 
-async function ensureFolderPath({ accessToken, folderPath }) {
+async function ensureFolderPath({ accessToken, pathRoot, folderPath }) {
   const normalized = normalizeDropboxPath(folderPath);
   if (normalized === '/') return;
 
@@ -241,15 +320,17 @@ async function ensureFolderPath({ accessToken, folderPath }) {
     currentPath += `/${segment}`;
     await createFolderIfMissing({
       accessToken,
+      pathRoot,
       folderPath: currentPath
     });
   }
 }
 
-async function fileExists({ accessToken, path }) {
+async function fileExists({ accessToken, pathRoot, path }) {
   try {
     await dropboxRpcRequest({
       accessToken,
+      pathRoot,
       endpoint: 'files/get_metadata',
       body: {
         path,
@@ -265,12 +346,15 @@ async function fileExists({ accessToken, path }) {
   }
 }
 
-async function uploadUsingContentEndpoint({ accessToken, path, buffer }) {
+async function uploadUsingContentEndpoint({ accessToken, pathRoot, path, buffer }) {
   const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/octet-stream',
+      ...buildDropboxHeaders({
+        accessToken,
+        contentType: 'application/octet-stream',
+        pathRoot
+      }),
       'Dropbox-API-Arg': JSON.stringify({
         path,
         mode: 'add',
@@ -293,7 +377,7 @@ async function uploadUsingContentEndpoint({ accessToken, path, buffer }) {
   return parsedBody;
 }
 
-async function uploadWithUniqueFileName({ accessToken, destinationFolder, fileName, buffer, logger }) {
+async function uploadWithUniqueFileName({ accessToken, pathRoot, destinationFolder, fileName, buffer, logger }) {
   const safeFileName = sanitizeFileName(fileName);
   const normalizedFolder = normalizeDropboxPath(destinationFolder);
 
@@ -303,6 +387,7 @@ async function uploadWithUniqueFileName({ accessToken, destinationFolder, fileNa
 
     const exists = await fileExists({
       accessToken,
+      pathRoot,
       path: candidatePath
     });
     if (exists) {
@@ -312,6 +397,7 @@ async function uploadWithUniqueFileName({ accessToken, destinationFolder, fileNa
     try {
       const uploaded = await uploadUsingContentEndpoint({
         accessToken,
+        pathRoot,
         path: candidatePath,
         buffer
       });
@@ -354,9 +440,10 @@ function getParentDropboxPath(folderPath) {
   return segments.length ? `/${segments.join('/')}` : '/';
 }
 
-async function listDropboxFolderPage({ accessToken, folderPath }) {
+async function listDropboxFolderPage({ accessToken, pathRoot, folderPath }) {
   return dropboxRpcRequest({
     accessToken,
+    pathRoot,
     endpoint: 'files/list_folder',
     body: {
       path: toListFolderPath(folderPath),
@@ -369,9 +456,10 @@ async function listDropboxFolderPage({ accessToken, folderPath }) {
   });
 }
 
-async function continueDropboxFolderListing({ accessToken, cursor }) {
+async function continueDropboxFolderListing({ accessToken, pathRoot, cursor }) {
   return dropboxRpcRequest({
     accessToken,
+    pathRoot,
     endpoint: 'files/list_folder/continue',
     body: {
       cursor
@@ -379,7 +467,7 @@ async function continueDropboxFolderListing({ accessToken, cursor }) {
   });
 }
 
-async function listDropboxFolders({ accessToken, folderPath }) {
+async function listDropboxFolders({ accessToken, pathRoot, folderPath }) {
   const requestedFolder = normalizeDropboxPath(folderPath);
   let normalizedFolder = requestedFolder;
   const entries = [];
@@ -389,6 +477,7 @@ async function listDropboxFolders({ accessToken, folderPath }) {
     try {
       page = await listDropboxFolderPage({
         accessToken,
+        pathRoot,
         folderPath: normalizedFolder
       });
       break;
@@ -406,6 +495,7 @@ async function listDropboxFolders({ accessToken, folderPath }) {
   while (page.has_more && page.cursor) {
     page = await continueDropboxFolderListing({
       accessToken,
+      pathRoot,
       cursor: page.cursor
     });
     entries.push(...(Array.isArray(page.entries) ? page.entries : []));
@@ -425,6 +515,7 @@ async function listDropboxFolders({ accessToken, folderPath }) {
 
   return {
     backend: 'dropbox_api',
+    pathRootMode: pathRoot?.['.tag'] || 'home',
     localRoot: null,
     absolutePath: normalizedFolder,
     dropboxFolder: normalizedFolder,
@@ -437,12 +528,27 @@ async function listDropboxFolders({ accessToken, folderPath }) {
   };
 }
 
-export function createDropboxFolderBrowser({ accessToken, appKey, appSecret, refreshToken, logger, retryConfig }) {
+export function createDropboxFolderBrowser({
+  accessToken,
+  appKey,
+  appSecret,
+  refreshToken,
+  pathRootMode,
+  pathRootNamespaceId,
+  logger,
+  retryConfig
+}) {
   const getAccessToken = createAccessTokenProvider({
     accessToken,
     appKey,
     appSecret,
     refreshToken,
+    logger
+  });
+  const getPathRoot = createPathRootProvider({
+    mode: pathRootMode,
+    namespaceId: pathRootNamespaceId,
+    getAccessToken,
     logger
   });
 
@@ -452,21 +558,40 @@ export function createDropboxFolderBrowser({ accessToken, appKey, appSecret, ref
         operationName: 'dropbox_list_folders',
         logger,
         retryConfig,
-        task: async (attempt) => listDropboxFolders({
-          accessToken: await getAccessToken({ forceRefresh: attempt > 1 }),
-          folderPath: inputPath
-        })
+        task: async (attempt) => {
+          const forceRefresh = attempt > 1;
+          return listDropboxFolders({
+            accessToken: await getAccessToken({ forceRefresh }),
+            pathRoot: await getPathRoot({ forceRefresh }),
+            folderPath: inputPath
+          });
+        }
       });
     }
   };
 }
 
-export function createDropboxUploader({ accessToken, appKey, appSecret, refreshToken, logger, retryConfig }) {
+export function createDropboxUploader({
+  accessToken,
+  appKey,
+  appSecret,
+  refreshToken,
+  pathRootMode,
+  pathRootNamespaceId,
+  logger,
+  retryConfig
+}) {
   const getAccessToken = createAccessTokenProvider({
     accessToken,
     appKey,
     appSecret,
     refreshToken,
+    logger
+  });
+  const getPathRoot = createPathRootProvider({
+    mode: pathRootMode,
+    namespaceId: pathRootNamespaceId,
+    getAccessToken,
     logger
   });
 
@@ -479,8 +604,10 @@ export function createDropboxUploader({ accessToken, appKey, appSecret, refreshT
         logger,
         retryConfig,
         task: async (attempt) => {
+          const forceRefresh = attempt > 1;
           await ensureFolderPath({
-            accessToken: await getAccessToken({ forceRefresh: attempt > 1 }),
+            accessToken: await getAccessToken({ forceRefresh }),
+            pathRoot: await getPathRoot({ forceRefresh }),
             folderPath: normalizedFolder
           });
         }
@@ -491,9 +618,11 @@ export function createDropboxUploader({ accessToken, appKey, appSecret, refreshT
         logger,
         retryConfig,
         task: async (attempt) => {
-          const uploadAccessToken = await getAccessToken({ forceRefresh: attempt > 1 });
+          const forceRefresh = attempt > 1;
+          const uploadAccessToken = await getAccessToken({ forceRefresh });
           const result = await uploadWithUniqueFileName({
             accessToken: uploadAccessToken,
+            pathRoot: await getPathRoot({ forceRefresh }),
             destinationFolder: normalizedFolder,
             fileName,
             buffer,
