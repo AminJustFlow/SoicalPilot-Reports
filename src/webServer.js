@@ -1,8 +1,75 @@
 import express from 'express';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createDropboxFolderBrowser } from './dropboxUploader.js';
 import { parseSubjectRouteCandidate } from './routeKey.js';
+
+function constantTimeEquals(left, right) {
+  const leftBuffer = Buffer.from(String(left || ''), 'utf8');
+  const rightBuffer = Buffer.from(String(right || ''), 'utf8');
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function parseBasicAuthHeader(headerValue) {
+  const raw = String(headerValue || '');
+  if (!raw.toLowerCase().startsWith('basic ')) {
+    return null;
+  }
+
+  const encoded = raw.slice(6).trim();
+  if (!encoded) {
+    return null;
+  }
+
+  let decoded;
+  try {
+    decoded = Buffer.from(encoded, 'base64').toString('utf8');
+  } catch {
+    return null;
+  }
+
+  const separatorIndex = decoded.indexOf(':');
+  if (separatorIndex < 0) {
+    return null;
+  }
+
+  return {
+    username: decoded.slice(0, separatorIndex),
+    password: decoded.slice(separatorIndex + 1)
+  };
+}
+
+function createAdminAuthMiddleware({ config, logger }) {
+  const authConfig = config.adminAuth || {};
+  if (!authConfig.enabled) {
+    logger.warn('Admin auth is disabled. Set ADMIN_USERNAME and ADMIN_PASSWORD before exposing the routes UI.');
+    return (_req, _res, next) => next();
+  }
+
+  return (req, res, next) => {
+    const credentials = parseBasicAuthHeader(req.headers.authorization);
+    const passwordHash = credentials?.password
+      ? crypto.createHash('sha256').update(credentials.password).digest('hex')
+      : '';
+
+    const usernameMatches = constantTimeEquals(credentials?.username || '', authConfig.username);
+    const passwordMatches = constantTimeEquals(passwordHash, authConfig.passwordHash);
+
+    if (usernameMatches && passwordMatches) {
+      next();
+      return;
+    }
+
+    res.setHeader('WWW-Authenticate', 'Basic realm="SocialPilot Routes", charset="UTF-8"');
+    res.status(401).type('text/plain').send('Authentication required');
+  };
+}
 
 function isPathInside(basePath, targetPath) {
   const relative = path.relative(basePath, targetPath);
@@ -1225,6 +1292,8 @@ export async function startWebServer({
 
     res.status(503).type('text/plain').send('NOT_OK');
   });
+
+  app.use(createAdminAuthMiddleware({ config, logger }));
 
   app.get('/', (_req, res) => {
     res.redirect('/routes');

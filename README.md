@@ -149,6 +149,7 @@ Common optional:
 - `DROPBOX_PATH_ROOT_MODE` (`auto`, `home`, `none`, or `namespace_id`; default `auto`)
 - `DROPBOX_PATH_ROOT_NAMESPACE_ID` (required only with `DROPBOX_PATH_ROOT_MODE=namespace_id`)
 - `DROPBOX_FOLDER_PREFIX` (optional Dropbox API base folder, for example `/Just-Flow-Corporate`)
+- `ADMIN_USERNAME` and `ADMIN_PASSWORD` (protect `/routes` and admin APIs with HTTP Basic Auth)
 - `IMAP_MAILBOX` (default `INBOX`)
 - `IMAP_SEARCH_WINDOW_DAYS` (default `30`)
 - `IMPORT_START_MODE` (`manual` or `auto`, default `manual`)
@@ -247,11 +248,15 @@ DROPBOX_FOLDER_PREFIX=/Just-Flow-Corporate
 HEALTH_HOST=0.0.0.0
 HEALTH_PORT=3100
 DB_PATH=/app/data/processed_messages.sqlite
+ADMIN_USERNAME=<admin username>
+ADMIN_PASSWORD=<strong admin password>
 ```
 
 Store secrets in AWS Secrets Manager or SSM Parameter Store, then inject them as container environment variables. Do not install Dropbox Desktop on AWS and do not set `LOCAL_DROPBOX_ROOT` for AWS.
 
 Persist `/app/data` with EFS, an EC2 volume, or another durable volume if you need SQLite state to survive container replacement. Without persistent storage, the app can reprocess old messages after redeploys.
+
+`/health` is intentionally left unauthenticated for platform health checks. The routes UI and management APIs require `ADMIN_USERNAME` and `ADMIN_PASSWORD` when those variables are set.
 
 ## Graceful Shutdown
 

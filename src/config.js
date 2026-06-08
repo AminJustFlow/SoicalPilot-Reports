@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import crypto from 'node:crypto';
 import path from 'node:path';
 
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'y', 'on']);
@@ -52,6 +53,23 @@ function parseDropboxPathRootMode() {
     throw new Error(`DROPBOX_PATH_ROOT_MODE must be one of: auto, home, none, namespace_id. Received: ${raw}`);
   }
   return raw;
+}
+
+function parseAdminAuthConfig() {
+  const username = parseSecretEnv('ADMIN_USERNAME');
+  const password = parseSecretEnv('ADMIN_PASSWORD');
+
+  if ((username && !password) || (!username && password)) {
+    throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD must both be set to enable admin auth');
+  }
+
+  return {
+    enabled: Boolean(username && password),
+    username,
+    passwordHash: password
+      ? crypto.createHash('sha256').update(password).digest('hex')
+      : null
+  };
 }
 
 function parseSecretEnv(name) {
@@ -223,6 +241,7 @@ export function loadConfig() {
       host: process.env.HEALTH_HOST?.trim() || '127.0.0.1',
       port: parseIntegerEnv('HEALTH_PORT', 3100, { min: 1, max: 65535 })
     },
+    adminAuth: parseAdminAuthConfig(),
     db: {
       path: path.resolve(process.cwd(), process.env.DB_PATH?.trim() || './data/processed_messages.sqlite')
     },
