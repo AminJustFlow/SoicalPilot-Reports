@@ -1507,6 +1507,13 @@ export async function startWebServer({
         return;
       }
 
+      await db.upsertRouteKeySuggestion({
+        routeKey,
+        clientName: routeKey,
+        source: 'deleted_route',
+        lastSeenAt: new Date()
+      });
+
       logger.info({ routeKey }, 'Routing rule deleted from web UI');
       res.status(200).json({ deleted: true });
     } catch (error) {
