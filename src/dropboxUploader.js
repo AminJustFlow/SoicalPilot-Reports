@@ -52,6 +52,37 @@ function normalizeDropboxPath(pathValue) {
   return `/${raw}`.replace(/\/{2,}/g, '/').replace(/\/$/, '');
 }
 
+function createDropboxPathResolver({ folderPrefix = '' } = {}) {
+  const normalizedPrefix = normalizeDropboxPath(folderPrefix);
+  const hasPrefix = normalizedPrefix !== '/';
+
+  function applyPrefix(folderPath) {
+    const normalizedFolder = normalizeDropboxPath(folderPath);
+    if (!hasPrefix) return normalizedFolder;
+    if (normalizedFolder === '/') return normalizedPrefix;
+    if (normalizedFolder === normalizedPrefix || normalizedFolder.startsWith(`${normalizedPrefix}/`)) {
+      return normalizedFolder;
+    }
+    return `${normalizedPrefix}${normalizedFolder}`;
+  }
+
+  function stripPrefix(folderPath) {
+    const normalizedFolder = normalizeDropboxPath(folderPath);
+    if (!hasPrefix) return normalizedFolder;
+    if (normalizedFolder === normalizedPrefix) return '/';
+    if (normalizedFolder.startsWith(`${normalizedPrefix}/`)) {
+      return normalizeDropboxPath(normalizedFolder.slice(normalizedPrefix.length));
+    }
+    return normalizedFolder;
+  }
+
+  return {
+    folderPrefix: hasPrefix ? normalizedPrefix : '',
+    applyPrefix,
+    stripPrefix
+  };
+}
+
 function sanitizeFileName(fileName) {
   const safeFileName = String(fileName || '').replace(/[\\/]+/g, '-').trim();
   if (!safeFileName) {
@@ -467,9 +498,10 @@ async function continueDropboxFolderListing({ accessToken, pathRoot, cursor }) {
   });
 }
 
-async function listDropboxFolders({ accessToken, pathRoot, folderPath }) {
+async function listDropboxFolders({ accessToken, pathRoot, pathResolver, folderPath }) {
   const requestedFolder = normalizeDropboxPath(folderPath);
-  let normalizedFolder = requestedFolder;
+  const requestedDropboxFolder = pathResolver.applyPrefix(requestedFolder);
+  let normalizedDropboxFolder = requestedDropboxFolder;
   const entries = [];
   let page;
 
@@ -478,15 +510,15 @@ async function listDropboxFolders({ accessToken, pathRoot, folderPath }) {
       page = await listDropboxFolderPage({
         accessToken,
         pathRoot,
-        folderPath: normalizedFolder
+        folderPath: normalizedDropboxFolder
       });
       break;
     } catch (error) {
-      const parentPath = getParentDropboxPath(normalizedFolder);
+      const parentPath = getParentDropboxPath(normalizedDropboxFolder);
       if (!isDropboxPathNotFoundError(error) || !parentPath) {
         throw error;
       }
-      normalizedFolder = parentPath;
+      normalizedDropboxFolder = parentPath;
     }
   }
 
@@ -504,26 +536,31 @@ async function listDropboxFolders({ accessToken, pathRoot, folderPath }) {
   const folders = entries
     .filter((entry) => entry?.['.tag'] === 'folder')
     .map((entry) => {
-      const dropboxFolder = normalizeDropboxPath(entry.path_display || entry.path_lower || entry.name);
+      const absoluteDropboxFolder = normalizeDropboxPath(entry.path_display || entry.path_lower || entry.name);
+      const dropboxFolder = pathResolver.stripPrefix(absoluteDropboxFolder);
       return {
         name: entry.name || dropboxFolder,
         absolutePath: dropboxFolder,
-        dropboxFolder
+        dropboxFolder,
+        fullDropboxPath: absoluteDropboxFolder
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const normalizedFolder = pathResolver.stripPrefix(normalizedDropboxFolder);
   return {
     backend: 'dropbox_api',
     pathRootMode: pathRoot?.['.tag'] || 'home',
+    folderPrefix: pathResolver.folderPrefix || null,
     localRoot: null,
     absolutePath: normalizedFolder,
     dropboxFolder: normalizedFolder,
     requestedPath: requestedFolder,
-    warning: requestedFolder !== normalizedFolder
+    fullDropboxPath: normalizedDropboxFolder,
+    warning: requestedDropboxFolder !== normalizedDropboxFolder
       ? `Requested path ${requestedFolder} was not found. Showing ${normalizedFolder} instead.`
       : null,
-    parentPath: getParentDropboxPath(normalizedFolder),
+    parentPath: normalizedFolder === '/' ? null : getParentDropboxPath(normalizedFolder),
     folders
   };
 }
@@ -535,6 +572,7 @@ export function createDropboxFolderBrowser({
   refreshToken,
   pathRootMode,
   pathRootNamespaceId,
+  folderPrefix,
   logger,
   retryConfig
 }) {
@@ -551,6 +589,7 @@ export function createDropboxFolderBrowser({
     getAccessToken,
     logger
   });
+  const pathResolver = createDropboxPathResolver({ folderPrefix });
 
   return {
     async listFolders({ inputPath }) {
@@ -563,6 +602,7 @@ export function createDropboxFolderBrowser({
           return listDropboxFolders({
             accessToken: await getAccessToken({ forceRefresh }),
             pathRoot: await getPathRoot({ forceRefresh }),
+            pathResolver,
             folderPath: inputPath
           });
         }
@@ -578,6 +618,7 @@ export function createDropboxUploader({
   refreshToken,
   pathRootMode,
   pathRootNamespaceId,
+  folderPrefix,
   logger,
   retryConfig
 }) {
@@ -594,10 +635,11 @@ export function createDropboxUploader({
     getAccessToken,
     logger
   });
+  const pathResolver = createDropboxPathResolver({ folderPrefix });
 
   return {
     async uploadPdf({ buffer, destinationFolder, fileName }) {
-      const normalizedFolder = normalizeDropboxPath(destinationFolder);
+      const normalizedFolder = pathResolver.applyPrefix(destinationFolder);
 
       await withRetry({
         operationName: 'dropbox_ensure_folder',

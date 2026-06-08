@@ -183,6 +183,9 @@ export function loadConfig() {
   const dropboxAppSecret = parseSecretEnv('DROPBOX_APP_SECRET');
   const dropboxPathRootMode = parseDropboxPathRootMode();
   const dropboxPathRootNamespaceId = String(process.env.DROPBOX_PATH_ROOT_NAMESPACE_ID || '').trim();
+  const dropboxFolderPrefix = normalizeDestinationFolder(process.env.DROPBOX_FOLDER_PREFIX || '', {
+    forceLeadingSlash: true
+  });
   if (dropboxRefreshToken.startsWith('sl.')) {
     throw new Error('DROPBOX_REFRESH_TOKEN looks like a short-lived Dropbox access token. Put this value in DROPBOX_ACCESS_TOKEN, or generate a real Dropbox refresh token.');
   }
@@ -256,6 +259,7 @@ export function loadConfig() {
       appSecret: dropboxAppSecret || null,
       pathRootMode: dropboxPathRootMode,
       pathRootNamespaceId: dropboxPathRootNamespaceId || null,
+      folderPrefix: dropboxFolderPrefix === '/' ? null : dropboxFolderPrefix,
       localRoot: localDropboxRoot,
       folderDefault: dropboxFolderDefault,
       bootstrapRoutes: parseBootstrapRoutes({

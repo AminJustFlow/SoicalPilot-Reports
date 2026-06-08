@@ -584,6 +584,7 @@ function renderRoutesPage() {
         : 'Browse folders through the Dropbox API';
       els.meta.innerHTML =
         'Upload backend: <code>' + (data.uploadBackend || 'dropbox_api') + '</code><br>' +
+        'Folder prefix: <code>' + (data.folderPrefix || '-') + '</code><br>' +
         'Local root: <code>' + (data.localDropboxRoot || '-') + '</code><br>' +
         'Default folder: <code>' + data.defaultFolder + '</code><br>' +
         'Dry run: <code>' + (data.dryRun ? 'true' : 'false') + '</code><br>' +
@@ -1200,6 +1201,7 @@ export async function startWebServer({
         refreshToken: config.dropbox.refreshToken,
         pathRootMode: config.dropbox.pathRootMode,
         pathRootNamespaceId: config.dropbox.pathRootNamespaceId,
+        folderPrefix: config.dropbox.folderPrefix,
         logger,
         retryConfig: config.retry
       })
@@ -1238,6 +1240,7 @@ export async function startWebServer({
         defaultFolder: config.dropbox.folderDefault,
         dryRun: config.dryRun,
         uploadBackend: config.dropbox.backend,
+        folderPrefix: config.dropbox.folderPrefix || null,
         localDropboxRoot: config.dropbox.localRoot || null,
         import: {
           startMode: healthState.importStartMode || config.runtime?.importStartMode || 'auto',

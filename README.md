@@ -116,6 +116,7 @@ Dropbox Business / team folders:
 - Keep the app as a user/file app with Full Dropbox access when you only need folders the connected user can access.
 - Do not add `team_data.*` scopes unless you are building a team-admin app.
 - Set `DROPBOX_PATH_ROOT_MODE=auto` so the service roots file calls at the account/team root when Dropbox reports a separate team root namespace.
+- Set `DROPBOX_FOLDER_PREFIX=/Just-Flow-Corporate` when route rules are stored relative to that team folder.
 - If Dropbox support gives you a specific namespace ID, use `DROPBOX_PATH_ROOT_MODE=namespace_id` and `DROPBOX_PATH_ROOT_NAMESPACE_ID=<namespace id>`.
 
 ## Environment Variables
@@ -147,6 +148,7 @@ Common optional:
 - `DROPBOX_REFRESH_TOKEN` (recommended when `UPLOAD_BACKEND=dropbox_api` on AWS)
 - `DROPBOX_PATH_ROOT_MODE` (`auto`, `home`, `none`, or `namespace_id`; default `auto`)
 - `DROPBOX_PATH_ROOT_NAMESPACE_ID` (required only with `DROPBOX_PATH_ROOT_MODE=namespace_id`)
+- `DROPBOX_FOLDER_PREFIX` (optional Dropbox API base folder, for example `/Just-Flow-Corporate`)
 - `IMAP_MAILBOX` (default `INBOX`)
 - `IMAP_SEARCH_WINDOW_DAYS` (default `30`)
 - `IMPORT_START_MODE` (`manual` or `auto`, default `manual`)
@@ -241,6 +243,7 @@ DROPBOX_APP_SECRET=<dropbox app secret>
 DROPBOX_REFRESH_TOKEN=<dropbox refresh token>
 DROPBOX_FOLDER_DEFAULT=/SocialPilot-Reports
 DROPBOX_PATH_ROOT_MODE=auto
+DROPBOX_FOLDER_PREFIX=/Just-Flow-Corporate
 HEALTH_HOST=0.0.0.0
 HEALTH_PORT=3100
 DB_PATH=/app/data/processed_messages.sqlite
