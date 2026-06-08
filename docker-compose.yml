@@ -1,0 +1,22 @@
+services:
+  socialpilot-dropbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: socialpilot-dropbox
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:' + (process.env.HEALTH_PORT || 3100) + '/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    env_file:
+      - .env
+    environment:
+      HEALTH_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:${HEALTH_PORT:-3100}:${HEALTH_PORT:-3100}"
+    volumes:
+      - ./data:/app/data
+    command: npm start

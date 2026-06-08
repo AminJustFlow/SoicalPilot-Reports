@@ -1,0 +1,487 @@
+{
+  "version": 1,
+  "exportedAt": "2026-03-04T21:50:55.859Z",
+  "ruleCount": 60,
+  "rules": [
+    {
+      "routeKey": "900_degrees_neapolitan_pizza",
+      "dropboxFolder": "/900-Degrees-(900)/900-Degrees/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:30:08",
+      "updatedAt": "2026-03-04 21:30:08"
+    },
+    {
+      "routeKey": "900_degrees_neapolitan_pizzeria",
+      "dropboxFolder": "/900-Degrees-(900)/900-Degrees/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:14:55",
+      "updatedAt": "2026-03-04 21:14:55"
+    },
+    {
+      "routeKey": "900degrees",
+      "dropboxFolder": "/900-Degrees-(900)/900-Degrees/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:30:23",
+      "updatedAt": "2026-03-04 21:30:23"
+    },
+    {
+      "routeKey": "aaa_pump_service_and_fay_electric_motors",
+      "dropboxFolder": "/AAA-Pump-Service-and-Fay-Electric-Motors-(AAA)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:12:33",
+      "updatedAt": "2026-03-04 21:12:33"
+    },
+    {
+      "routeKey": "aaa_pump_service_fay_electric_motors",
+      "dropboxFolder": "/AAA-Pump-Service-and-Fay-Electric-Motors-(AAA)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:37:42",
+      "updatedAt": "2026-03-04 21:37:42"
+    },
+    {
+      "routeKey": "agent_confidential",
+      "dropboxFolder": "/Agent-Confidential-(ACO)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:13:58",
+      "updatedAt": "2026-03-04 21:13:58"
+    },
+    {
+      "routeKey": "bistro603",
+      "dropboxFolder": "/Bistro-603-and-Bistro-781-(BIS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:15:32",
+      "updatedAt": "2026-03-04 21:15:32"
+    },
+    {
+      "routeKey": "bistro781",
+      "dropboxFolder": "/Bistro-603-and-Bistro-781-(BIS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:15:41",
+      "updatedAt": "2026-03-04 21:15:41"
+    },
+    {
+      "routeKey": "bistro_781",
+      "dropboxFolder": "/Bistro-603-and-Bistro-781-(BIS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:46:26",
+      "updatedAt": "2026-03-04 21:46:26"
+    },
+    {
+      "routeKey": "boulder_way",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/Boulder-Way",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:25:00",
+      "updatedAt": "2026-03-04 21:25:00"
+    },
+    {
+      "routeKey": "canoe_restaurant_and_tavern",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:16:50",
+      "updatedAt": "2026-03-04 21:16:50"
+    },
+    {
+      "routeKey": "evergreen_way",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:36:44",
+      "updatedAt": "2026-03-04 21:36:44"
+    },
+    {
+      "routeKey": "fimbel_garage_doors",
+      "dropboxFolder": "/Fimbel-Garage-Doors-(FMB)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:20:04",
+      "updatedAt": "2026-03-04 21:20:04"
+    },
+    {
+      "routeKey": "fimbel_garage_doors_seacoast",
+      "dropboxFolder": "/Fimbel-Garage-Doors-(FMB)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:38:25",
+      "updatedAt": "2026-03-04 21:38:25"
+    },
+    {
+      "routeKey": "fimbel_paunet_corporation",
+      "dropboxFolder": "/Fimbel-Garage-Doors-(FMB)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:31:01",
+      "updatedAt": "2026-03-04 21:31:01"
+    },
+    {
+      "routeKey": "fimbel_seacoast_garage_doors",
+      "dropboxFolder": "/Fimbel-Garage-Doors-(FMB)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:31:15",
+      "updatedAt": "2026-03-04 21:31:15"
+    },
+    {
+      "routeKey": "fimbeldoor",
+      "dropboxFolder": "/Fimbel-Garage-Doors-(FMB)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:31:24",
+      "updatedAt": "2026-03-04 21:31:24"
+    },
+    {
+      "routeKey": "guardian_angel_senior_services",
+      "dropboxFolder": "/Guardian-Angel-Senior-Services-(GAS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:25:50",
+      "updatedAt": "2026-03-04 21:25:50"
+    },
+    {
+      "routeKey": "guardian_angel_senior_services_inc",
+      "dropboxFolder": "/Guardian-Angel-Senior-Services-(GAS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:09:50",
+      "updatedAt": "2026-03-04 21:09:50"
+    },
+    {
+      "routeKey": "guardian_angel_senior_services_inc_bedford_nh",
+      "dropboxFolder": "/Guardian-Angel-Senior-Services-(GAS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:32:09",
+      "updatedAt": "2026-03-04 21:32:09"
+    },
+    {
+      "routeKey": "guardian_angel_senior_services_leominster",
+      "dropboxFolder": "/Guardian-Angel-Senior-Services-(GAS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:38:58",
+      "updatedAt": "2026-03-04 21:38:58"
+    },
+    {
+      "routeKey": "guardian_angel_senior_services_malden",
+      "dropboxFolder": "/Guardian-Angel-Senior-Services-(GAS)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:39:11",
+      "updatedAt": "2026-03-04 21:39:11"
+    },
+    {
+      "routeKey": "ibew2320nh",
+      "dropboxFolder": "/IBEW-2320-(IBE)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:32:43",
+      "updatedAt": "2026-03-04 21:32:43"
+    },
+    {
+      "routeKey": "ibew_local_2320",
+      "dropboxFolder": "/IBEW-2320-(IBE)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:26:46",
+      "updatedAt": "2026-03-04 21:26:46"
+    },
+    {
+      "routeKey": "ibewlocal2320",
+      "dropboxFolder": "/IBEW-2320-(IBE)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:33:06",
+      "updatedAt": "2026-03-04 21:33:06"
+    },
+    {
+      "routeKey": "inn_on_main_and_o_bistro_restaurant_and_events",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:46:58",
+      "updatedAt": "2026-03-04 21:46:58"
+    },
+    {
+      "routeKey": "international_brotherhood_of_electrical_workers_ibew_local_2320",
+      "dropboxFolder": "/IBEW-2320-(IBE)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:39:41",
+      "updatedAt": "2026-03-04 21:39:41"
+    },
+    {
+      "routeKey": "just_flow_events_and_marketing",
+      "dropboxFolder": "/Just-Flow-Events-and-Marketing-(JF)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:11:55",
+      "updatedAt": "2026-03-04 21:11:55"
+    },
+    {
+      "routeKey": "just_flow_nh",
+      "dropboxFolder": "/Just-Flow-Events-and-Marketing-(JF)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:34:08",
+      "updatedAt": "2026-03-04 21:34:08"
+    },
+    {
+      "routeKey": "lna_health_careers",
+      "dropboxFolder": "/LNA-Health-Careers-(LHC)/LNA-Health-Careers/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:41:11",
+      "updatedAt": "2026-03-04 21:41:11"
+    },
+    {
+      "routeKey": "magic_foods_catering",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:18:20",
+      "updatedAt": "2026-03-04 21:18:20"
+    },
+    {
+      "routeKey": "manchester_historic_association",
+      "dropboxFolder": "/Manchester-Historic-Association-(MHA)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:46:05",
+      "updatedAt": "2026-03-04 21:46:05"
+    },
+    {
+      "routeKey": "manchester_historic_association_s_millyard_museum",
+      "dropboxFolder": "/Manchester-Historic-Association-(MHA)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:48:19",
+      "updatedAt": "2026-03-04 21:48:19"
+    },
+    {
+      "routeKey": "millyard_museum",
+      "dropboxFolder": "/Manchester-Historic-Association-(MHA)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:47:24",
+      "updatedAt": "2026-03-04 21:47:24"
+    },
+    {
+      "routeKey": "mtn_landscaping",
+      "dropboxFolder": "/MTN-Landscaping-(MTN)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:20:50",
+      "updatedAt": "2026-03-04 21:20:50"
+    },
+    {
+      "routeKey": "nicholson_law_firm_pllc",
+      "dropboxFolder": "/Nicholson-LeTourneau-PLLC-(NLF)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:23:50",
+      "updatedAt": "2026-03-04 21:23:50"
+    },
+    {
+      "routeKey": "nurse_aide_media",
+      "dropboxFolder": "/Nurse-Aide-Media-(NAM)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:24:33",
+      "updatedAt": "2026-03-04 21:24:33"
+    },
+    {
+      "routeKey": "o_bistro",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:47:56",
+      "updatedAt": "2026-03-04 21:47:56"
+    },
+    {
+      "routeKey": "o_bistro_at_the_inn_on_main",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:48:49",
+      "updatedAt": "2026-03-04 21:48:49"
+    },
+    {
+      "routeKey": "o_steaks_and_seafood",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:17:52",
+      "updatedAt": "2026-03-04 21:17:52"
+    },
+    {
+      "routeKey": "o_steaks_and_seafood_concord",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:17:24",
+      "updatedAt": "2026-03-04 21:17:24"
+    },
+    {
+      "routeKey": "o_steaks_and_seafood_laconia",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:17:33",
+      "updatedAt": "2026-03-04 21:17:33"
+    },
+    {
+      "routeKey": "perrault_blair_law_group_pllc",
+      "dropboxFolder": "/Perrault-Blair-Law-(PBL)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:27:28",
+      "updatedAt": "2026-03-04 21:27:28"
+    },
+    {
+      "routeKey": "perrault_law_group_pllc",
+      "dropboxFolder": "/Perrault-Blair-Law-(PBL)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:37:19",
+      "updatedAt": "2026-03-04 21:37:19"
+    },
+    {
+      "routeKey": "perraultblairlaw",
+      "dropboxFolder": "/Perrault-Blair-Law-(PBL)/Projects/+Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:34:42",
+      "updatedAt": "2026-03-04 21:34:42"
+    },
+    {
+      "routeKey": "rad_concord",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:28:44",
+      "updatedAt": "2026-03-04 21:28:44"
+    },
+    {
+      "routeKey": "rad_londonderry",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:29:07",
+      "updatedAt": "2026-03-04 21:29:07"
+    },
+    {
+      "routeKey": "rad_manchester",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:28:54",
+      "updatedAt": "2026-03-04 21:28:54"
+    },
+    {
+      "routeKey": "rad_nashua",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:29:19",
+      "updatedAt": "2026-03-04 21:29:19"
+    },
+    {
+      "routeKey": "red_arrow_diner",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:29:32",
+      "updatedAt": "2026-03-04 21:29:32"
+    },
+    {
+      "routeKey": "red_arrow_twitter",
+      "dropboxFolder": "/Red-Arrow-Diner-(RAD)/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:35:12",
+      "updatedAt": "2026-03-04 21:35:12"
+    },
+    {
+      "routeKey": "rubbin_butts_bbq",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:17:04",
+      "updatedAt": "2026-03-04 21:17:04"
+    },
+    {
+      "routeKey": "saddle_rock_way",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/SaddleRock",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:21:58",
+      "updatedAt": "2026-03-04 21:21:58"
+    },
+    {
+      "routeKey": "socha_companies",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:10:43",
+      "updatedAt": "2026-03-04 21:10:43"
+    },
+    {
+      "routeKey": "studley_flower_gardens",
+      "dropboxFolder": "/Studley-Flower-Gardens-(SFG)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:23:03",
+      "updatedAt": "2026-03-04 21:23:03"
+    },
+    {
+      "routeKey": "suna_restaurant",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:17:13",
+      "updatedAt": "2026-03-04 21:17:13"
+    },
+    {
+      "routeKey": "the_carriage_house_restaurant",
+      "dropboxFolder": "/Castle-in-the-Clouds-(CIC)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:50:10",
+      "updatedAt": "2026-03-04 21:50:10"
+    },
+    {
+      "routeKey": "the_inn_on_main",
+      "dropboxFolder": "/Magic-Foods-Restaurant-Group-(MFR)/Projects/Analytics/SocialPilot-Reports",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:50:40",
+      "updatedAt": "2026-03-04 21:50:40"
+    },
+    {
+      "routeKey": "the_timbers",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/TheTimbers",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:36:08",
+      "updatedAt": "2026-03-04 21:36:08"
+    },
+    {
+      "routeKey": "the_timbers_townhomes",
+      "dropboxFolder": "/Socha-Companies-(SOC)/Projects/Analytics/TheTimbers",
+      "isActive": true,
+      "notes": "",
+      "createdAt": "2026-03-04 21:36:24",
+      "updatedAt": "2026-03-04 21:36:24"
+    }
+  ]
+}

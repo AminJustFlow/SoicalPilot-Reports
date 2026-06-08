@@ -1,0 +1,28 @@
+{
+  "name": "socialpilot-dropbox-archiver",
+  "version": "1.0.0",
+  "description": "Automatically saves SocialPilot PDF reports from IMAP to Dropbox",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "dotenv": "^16.4.5",
+    "dropbox": "^10.34.0",
+    "express": "^4.21.2",
+    "imapflow": "^1.0.181",
+    "mailparser": "^3.7.2",
+    "pino": "^9.4.0",
+    "pino-pretty": "^13.0.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
