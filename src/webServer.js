@@ -1121,7 +1121,12 @@ function renderRoutesPage() {
         }
 
         if (body.alreadyRunning) {
-          setImportStatus('Processing is already running.', 'ok');
+          setImportStatus(
+            body.scanRequested
+              ? 'Processing is running. Mailbox rescan requested.'
+              : 'Processing is already running and reconnecting. Try again after IMAP connects.',
+            body.scanRequested ? 'ok' : 'err'
+          );
         } else if (body.started) {
           setImportStatus('Processing started. Reports will now download and route by configured rules.', 'ok');
         } else {

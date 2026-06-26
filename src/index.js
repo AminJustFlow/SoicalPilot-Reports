@@ -162,6 +162,7 @@ async function main() {
   let resetAndRestartRequested = false;
   let forceExitTimer = null;
   let watcherPromise = null;
+  let requestWatcherScan = null;
 
   function requestShutdown(signalName) {
     if (shuttingDown) return;
@@ -307,6 +308,9 @@ async function main() {
         signal: abortController.signal,
         isProcessedMessage: db.isProcessedMessage,
         onMessage,
+        onScanControl: (requestScan) => {
+          requestWatcherScan = requestScan;
+        },
         onStatus: (status) => {
           if (status.type === 'connected') {
             healthState.imapConnected = true;
@@ -336,6 +340,7 @@ async function main() {
       healthState.imapAuthFailed = Boolean(error?.authenticationFailed);
       throw error;
     } finally {
+      requestWatcherScan = null;
       healthState.imapLoopRunning = false;
       healthState.imapConnected = false;
       watcherPromise = null;
@@ -347,9 +352,17 @@ async function main() {
 
   function startWatcher({ trigger }) {
     if (watcherPromise) {
+      const scanRequested = Boolean(requestWatcherScan);
+      if (requestWatcherScan) {
+        requestWatcherScan('manual_start').catch((error) => {
+          logger.error({ err: error, trigger }, 'Unable to rescan the mailbox');
+        });
+      }
+
       return {
         started: false,
-        alreadyRunning: true
+        alreadyRunning: true,
+        scanRequested
       };
     }
 

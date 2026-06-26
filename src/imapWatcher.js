@@ -136,7 +136,8 @@ export async function startImapWatcher({
   signal,
   isProcessedMessage,
   onMessage,
-  onStatus
+  onStatus,
+  onScanControl
 }) {
   let reconnectAttempt = 0;
   const authResolver = createImapAuthResolver({ config, logger });
@@ -206,6 +207,10 @@ export async function startImapWatcher({
       reconnectAttempt = 0;
       emitStatus('connected');
 
+      if (typeof onScanControl === 'function') {
+        onScanControl((reason = 'manual') => runScan(reason));
+      }
+
       logger.info(
         {
           host: config.imap.host,
@@ -266,6 +271,9 @@ export async function startImapWatcher({
 
       await sleep(backoffMs, signal).catch(() => {});
     } finally {
+      if (typeof onScanControl === 'function') {
+        onScanControl(null);
+      }
       emitStatus('disconnected');
 
       try {
