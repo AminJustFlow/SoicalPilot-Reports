@@ -54,6 +54,15 @@ export async function parseEmail(rawSource) {
     fromText,
     recipients,
     text: String(parsed.text || ''),
-    html: typeof parsed.html === 'string' ? parsed.html : ''
+    html: typeof parsed.html === 'string' ? parsed.html : '',
+    attachments: (parsed.attachments || []).map((attachment, index) => ({
+      index,
+      filename: String(attachment.filename || '').trim() || `attachment-${index + 1}`,
+      contentType: String(attachment.contentType || '').trim().toLowerCase(),
+      contentDisposition: String(attachment.contentDisposition || '').trim().toLowerCase(),
+      contentId: String(attachment.cid || '').trim() || null,
+      size: Number(attachment.size) || attachment.content?.length || 0,
+      content: Buffer.isBuffer(attachment.content) ? attachment.content : Buffer.from(attachment.content || '')
+    }))
   };
 }

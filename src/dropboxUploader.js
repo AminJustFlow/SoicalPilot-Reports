@@ -408,7 +408,7 @@ async function uploadUsingContentEndpoint({ accessToken, pathRoot, path, buffer 
   return parsedBody;
 }
 
-async function uploadWithUniqueFileName({ accessToken, pathRoot, destinationFolder, fileName, buffer, logger }) {
+async function uploadWithUniqueFileName({ accessToken, pathRoot, destinationFolder, fileName, buffer, logger, conflictBehavior = 'suffix' }) {
   const safeFileName = sanitizeFileName(fileName);
   const normalizedFolder = normalizeDropboxPath(destinationFolder);
 
@@ -422,6 +422,12 @@ async function uploadWithUniqueFileName({ accessToken, pathRoot, destinationFold
       path: candidatePath
     });
     if (exists) {
+      if (conflictBehavior === 'error') {
+        const conflict = new Error(`Destination file already exists: ${candidatePath}`);
+        conflict.code = 'DESTINATION_CONFLICT';
+        conflict.destinationPath = candidatePath;
+        throw conflict;
+      }
       continue;
     }
 
@@ -638,7 +644,7 @@ export function createDropboxUploader({
   const pathResolver = createDropboxPathResolver({ folderPrefix });
 
   return {
-    async uploadPdf({ buffer, destinationFolder, fileName }) {
+    async uploadPdf({ buffer, destinationFolder, fileName, conflictBehavior = 'suffix' }) {
       const normalizedFolder = pathResolver.applyPrefix(destinationFolder);
 
       await withRetry({
@@ -668,7 +674,8 @@ export function createDropboxUploader({
             destinationFolder: normalizedFolder,
             fileName,
             buffer,
-            logger
+            logger,
+            conflictBehavior
           });
 
           logger.info(

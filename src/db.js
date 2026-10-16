@@ -274,11 +274,65 @@ export async function initDb({ dbPath, logger }) {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS ga4_property_routes (
+      property_key TEXT PRIMARY KEY,
+      property_name TEXT NOT NULL,
+      client_code TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      property_label TEXT NOT NULL,
+      destination_template TEXT NOT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS ga4_report_definitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      property_key TEXT NOT NULL DEFAULT '*',
+      report_key TEXT NOT NULL,
+      report_title TEXT NOT NULL,
+      report_label TEXT NOT NULL,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(property_key, report_key)
+    );
+
+    CREATE TABLE IF NOT EXISTS ga4_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uid_validity TEXT NOT NULL,
+      imap_uid INTEGER NOT NULL,
+      message_id TEXT NOT NULL DEFAULT '',
+      attachment_index INTEGER NOT NULL,
+      original_filename TEXT,
+      checksum TEXT NOT NULL,
+      property_name TEXT,
+      property_key TEXT,
+      report_title TEXT,
+      report_key TEXT,
+      period_start TEXT,
+      period_end TEXT,
+      batch_date TEXT,
+      generated_filename TEXT,
+      destination_folder TEXT,
+      dropbox_path TEXT,
+      pending_file_path TEXT,
+      status TEXT NOT NULL,
+      error_reason TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(uid_validity, imap_uid, attachment_index),
+      UNIQUE(checksum, destination_folder, generated_filename)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_routing_rules_active_email
       ON routing_rules (is_active, recipient_email);
 
     CREATE INDEX IF NOT EXISTS idx_route_key_suggestions_seen_count
       ON route_key_suggestions (seen_count DESC, updated_at DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_ga4_attachments_status ON ga4_attachments(status, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_ga4_attachments_checksum ON ga4_attachments(checksum);
   `);
 
   await migrateProcessedMessages(db, logger);
@@ -701,6 +755,140 @@ export async function initDb({ dbPath, logger }) {
 
     async resolveRecipientRoute(recipients) {
       return this.resolveRouteByKeys(recipients);
+    },
+
+    async listGa4PropertyRoutes() {
+      const rows = await db.all(`SELECT property_key AS propertyKey, property_name AS propertyName,
+        client_code AS clientCode, client_name AS clientName, property_label AS propertyLabel,
+        destination_template AS destinationTemplate, is_active AS isActive,
+        created_at AS createdAt, updated_at AS updatedAt
+        FROM ga4_property_routes ORDER BY client_name, property_name`);
+      return rows.map((row) => ({ ...row, isActive: Boolean(row.isActive) }));
+    },
+
+    async upsertGa4PropertyRoute({ propertyKey, propertyName, clientCode, clientName, propertyLabel, destinationTemplate, isActive = true }) {
+      const key = normalizeRouteKey(propertyKey);
+      const values = [propertyName, clientCode, clientName, propertyLabel, destinationTemplate]
+        .map((value) => String(value || '').trim());
+      if (!key || values.some((value) => !value)) throw new Error('All GA4 property route fields are required');
+      await db.run(`INSERT INTO ga4_property_routes
+        (property_key, property_name, client_code, client_name, property_label, destination_template, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(property_key) DO UPDATE SET property_name=excluded.property_name,
+        client_code=excluded.client_code, client_name=excluded.client_name,
+        property_label=excluded.property_label, destination_template=excluded.destination_template,
+        is_active=excluded.is_active, updated_at=datetime('now')`, key, ...values, isActive ? 1 : 0);
+      return { propertyKey: key, propertyName: values[0], clientCode: values[1], clientName: values[2], propertyLabel: values[3], destinationTemplate: values[4], isActive: Boolean(isActive) };
+    },
+
+    async deleteGa4PropertyRoute(propertyKey) {
+      const result = await db.run('DELETE FROM ga4_property_routes WHERE property_key = ?', normalizeRouteKey(propertyKey));
+      return result.changes > 0;
+    },
+
+    async findGa4PropertyRoute(propertyKey) {
+      return db.get(`SELECT property_key AS propertyKey, property_name AS propertyName,
+        client_code AS clientCode, client_name AS clientName, property_label AS propertyLabel,
+        destination_template AS destinationTemplate FROM ga4_property_routes
+        WHERE property_key = ? AND is_active = 1 LIMIT 1`, normalizeRouteKey(propertyKey));
+    },
+
+    async listGa4ReportDefinitions() {
+      const rows = await db.all(`SELECT id, property_key AS propertyKey, report_key AS reportKey,
+        report_title AS reportTitle, report_label AS reportLabel, is_active AS isActive,
+        created_at AS createdAt, updated_at AS updatedAt FROM ga4_report_definitions
+        ORDER BY property_key, report_title`);
+      return rows.map((row) => ({ ...row, isActive: Boolean(row.isActive) }));
+    },
+
+    async upsertGa4ReportDefinition({ propertyKey = '*', reportKey, reportTitle, reportLabel, isActive = true }) {
+      const property = propertyKey === '*' ? '*' : normalizeRouteKey(propertyKey);
+      const key = normalizeRouteKey(reportKey || reportTitle);
+      const title = String(reportTitle || '').trim();
+      const label = String(reportLabel || '').trim().replace(/\.pdf$/i, '');
+      if (!property || !key || !title || !label) throw new Error('All GA4 report definition fields are required');
+
+      const collision = await db.get(`SELECT report_key AS reportKey FROM ga4_report_definitions
+        WHERE property_key = ? AND report_label = ? AND report_key <> ? AND is_active = 1 LIMIT 1`, property, label, key);
+      if (collision) throw new Error(`GA4 report label conflicts with ${collision.reportKey}`);
+
+      await db.run(`INSERT INTO ga4_report_definitions
+        (property_key, report_key, report_title, report_label, is_active) VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(property_key, report_key) DO UPDATE SET report_title=excluded.report_title,
+        report_label=excluded.report_label, is_active=excluded.is_active, updated_at=datetime('now')`,
+        property, key, title, label, isActive ? 1 : 0);
+      return { propertyKey: property, reportKey: key, reportTitle: title, reportLabel: label, isActive: Boolean(isActive) };
+    },
+
+    async deleteGa4ReportDefinition({ propertyKey = '*', reportKey }) {
+      const result = await db.run('DELETE FROM ga4_report_definitions WHERE property_key = ? AND report_key = ?',
+        propertyKey === '*' ? '*' : normalizeRouteKey(propertyKey), normalizeRouteKey(reportKey));
+      return result.changes > 0;
+    },
+
+    async findGa4ReportDefinition({ propertyKey, reportKey }) {
+      return db.get(`SELECT property_key AS propertyKey, report_key AS reportKey,
+        report_title AS reportTitle, report_label AS reportLabel FROM ga4_report_definitions
+        WHERE is_active = 1 AND report_key = ? AND property_key IN (?, '*')
+        ORDER BY CASE WHEN property_key = ? THEN 0 ELSE 1 END LIMIT 1`,
+        normalizeRouteKey(reportKey), normalizeRouteKey(propertyKey), normalizeRouteKey(propertyKey));
+    },
+
+    async getGa4Attachment({ uidValidity, imapUid, attachmentIndex }) {
+      return db.get(`SELECT * FROM ga4_attachments WHERE uid_validity = ? AND imap_uid = ? AND attachment_index = ? LIMIT 1`,
+        normalizeUidValidity(uidValidity), normalizeImapUid(imapUid), Number(attachmentIndex));
+    },
+
+    async findGa4DestinationFile({ destinationFolder, generatedFilename }) {
+      return db.get(`SELECT id, checksum, status, dropbox_path AS dropboxPath FROM ga4_attachments
+        WHERE destination_folder = ? AND generated_filename = ? AND status IN ('uploaded', 'dry_run_downloaded') LIMIT 1`,
+        normalizeDestinationFolder(destinationFolder), String(generatedFilename || '').trim());
+    },
+
+    async saveGa4Attachment(record) {
+      const values = {
+        uidValidity: normalizeUidValidity(record.uidValidity), imapUid: normalizeImapUid(record.imapUid),
+        messageId: normalizeMessageId(record.messageId), attachmentIndex: Number(record.attachmentIndex),
+        originalFilename: String(record.originalFilename || ''), checksum: String(record.checksum || ''),
+        propertyName: record.propertyName || null, propertyKey: normalizeRouteKey(record.propertyKey) || null,
+        reportTitle: record.reportTitle || null, reportKey: normalizeRouteKey(record.reportKey) || null,
+        periodStart: record.periodStart || null, periodEnd: record.periodEnd || null, batchDate: record.batchDate || null,
+        generatedFilename: record.generatedFilename || null, destinationFolder: record.destinationFolder ? normalizeDestinationFolder(record.destinationFolder) : null,
+        dropboxPath: record.dropboxPath || null, pendingFilePath: record.pendingFilePath || null,
+        status: String(record.status || '').trim(), errorReason: record.errorReason || null
+      };
+      if (!values.checksum || !values.status) throw new Error('GA4 attachment checksum and status are required');
+      await db.run(`INSERT INTO ga4_attachments
+        (uid_validity, imap_uid, message_id, attachment_index, original_filename, checksum,
+         property_name, property_key, report_title, report_key, period_start, period_end, batch_date,
+         generated_filename, destination_folder, dropbox_path, pending_file_path, status, error_reason)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(uid_validity, imap_uid, attachment_index) DO UPDATE SET
+         checksum=excluded.checksum, property_name=excluded.property_name, property_key=excluded.property_key,
+         report_title=excluded.report_title, report_key=excluded.report_key, period_start=excluded.period_start,
+         period_end=excluded.period_end, batch_date=excluded.batch_date, generated_filename=excluded.generated_filename,
+         destination_folder=excluded.destination_folder, dropbox_path=excluded.dropbox_path,
+         pending_file_path=excluded.pending_file_path, status=excluded.status,
+         error_reason=excluded.error_reason, updated_at=datetime('now')`, ...Object.values(values));
+      return this.getGa4Attachment(record);
+    },
+
+    async listGa4Attachments({ pendingOnly = false } = {}) {
+      const where = pendingOnly ? "WHERE status LIKE 'pending_%' OR status = 'retryable'" : '';
+      return db.all(`SELECT id, uid_validity AS uidValidity, imap_uid AS imapUid,
+        attachment_index AS attachmentIndex, original_filename AS originalFilename, checksum,
+        property_name AS propertyName, property_key AS propertyKey, report_title AS reportTitle,
+        report_key AS reportKey, period_start AS periodStart, period_end AS periodEnd, batch_date AS batchDate,
+        generated_filename AS generatedFilename, destination_folder AS destinationFolder,
+        dropbox_path AS dropboxPath, pending_file_path AS pendingFilePath, status,
+        error_reason AS errorReason, created_at AS createdAt, updated_at AS updatedAt
+        FROM ga4_attachments ${where} ORDER BY updated_at DESC`);
+    },
+
+    async reopenPreviouslySkippedGa4Messages() {
+      const result = await db.run(`DELETE FROM processed_messages WHERE status = 'skipped_filter'
+        AND lower(COALESCE(from_address, '')) = 'noreply-analytics@google.com'`);
+      return result.changes || 0;
     },
 
     async findProcessedReport({ reportKey = '', reportUrl = '' } = {}) {

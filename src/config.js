@@ -270,6 +270,11 @@ export function loadConfig() {
     runtime: {
       importStartMode
     },
+    ga4: {
+      enabled: parseBooleanEnv('GA4_ENABLED', false),
+      maxPdfBytes: parseIntegerEnv('GA4_MAX_PDF_BYTES', 25 * 1024 * 1024, { min: 1024, max: 100 * 1024 * 1024 }),
+      pendingDir: path.resolve(process.cwd(), process.env.GA4_PENDING_DIR?.trim() || './data/ga4-pending')
+    },
     dropbox: {
       backend: uploadBackend,
       accessToken: dropboxAccessToken || null,

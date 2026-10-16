@@ -17,6 +17,8 @@ import { createDropboxUploader } from './dropboxUploader.js';
 import { createLocalUploader } from './localUploader.js';
 import { discoverRouteKeyCandidates, startImapWatcher } from './imapWatcher.js';
 import { parseSubjectRouteCandidate } from './routeKey.js';
+import { detectReportProvider, REPORT_PROVIDERS } from './providerDetector.js';
+import { createGa4Processor } from './ga4Processor.js';
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
@@ -140,6 +142,11 @@ async function main() {
     logger
   });
 
+  if (config.ga4.enabled) {
+    const reopened = await db.reopenPreviouslySkippedGa4Messages();
+    if (reopened > 0) logger.info({ provider: 'ga4', reopened }, 'Reopened previously skipped GA4 messages');
+  }
+
   const bootstrappedRouteCount = await db.bootstrapRoutingRules(config.dropbox.bootstrapRoutes);
   if (bootstrappedRouteCount > 0) {
     logger.info({ bootstrappedRouteCount }, 'Bootstrapped routing rules from environment');
@@ -163,6 +170,7 @@ async function main() {
   let forceExitTimer = null;
   let watcherPromise = null;
   let requestWatcherScan = null;
+  let ga4Processor = null;
 
   function requestShutdown(signalName) {
     if (shuttingDown) return;
@@ -229,6 +237,10 @@ async function main() {
       }
       return startWatcher({ trigger });
     },
+    onRetryGa4Attachment: async (id) => {
+      if (!ga4Processor) throw new Error('GA4 processor is still initializing');
+      return ga4Processor.retryAttachment(id);
+    },
     onPrepareResetImportState: async ({ trigger }) => {
       if (resetAndRestartRequested) return;
       resetAndRestartRequested = true;
@@ -285,6 +297,8 @@ async function main() {
           logger,
           retryConfig: config.retry
         });
+
+  ga4Processor = createGa4Processor({ db, uploader, config, logger });
 
   logger.info(
     {
@@ -396,19 +410,13 @@ async function main() {
     const envelopeFrom = extractEnvelopeFrom(message.envelope);
     const envelopeMessageId = normalizeMessageId(message.envelope?.messageId);
 
-    let parsed = null;
-    let filterSubject = envelopeSubject;
-    let filterFromAddresses = envelopeFrom.addresses;
-    let filterFromText = envelopeFrom.text;
+    const parsed = await parseEmail(message.source);
+    const filterSubject = parsed.subject || envelopeSubject;
+    const filterFromAddresses = parsed.fromAddresses.length ? parsed.fromAddresses : envelopeFrom.addresses;
+    const filterFromText = parsed.fromText || envelopeFrom.text;
+    const provider = detectReportProvider({ ...parsed, subject: filterSubject, fromAddresses: filterFromAddresses, fromText: filterFromText });
 
-    if (!filterSubject || (!filterFromAddresses.length && !filterFromText)) {
-      parsed = await parseEmail(message.source);
-      filterSubject = filterSubject || parsed.subject;
-      filterFromAddresses = filterFromAddresses.length ? filterFromAddresses : parsed.fromAddresses;
-      filterFromText = filterFromText || parsed.fromText;
-    }
-
-    if (!matchesReportFilter({ fromAddresses: filterFromAddresses, fromText: filterFromText, subject: filterSubject })) {
+    if (!provider || (provider === REPORT_PROVIDERS.GA4 && !config.ga4.enabled)) {
       await db.markMessageProcessed({
         uidValidity: message.uidValidity,
         imapUid: message.uid,
@@ -416,7 +424,7 @@ async function main() {
         fromAddress: filterFromAddresses[0] || null,
         subject: filterSubject || null,
         status: 'skipped_filter',
-        notes: 'Message does not match sender/subject filter for SocialPilot reports'
+        notes: provider === REPORT_PROVIDERS.GA4 ? 'GA4 processing is disabled' : 'Message does not match a configured report provider'
       });
 
       messageLogger.debug(
@@ -429,8 +437,20 @@ async function main() {
       return true;
     }
 
-    if (!parsed) {
-      parsed = await parseEmail(message.source);
+    if (provider === REPORT_PROVIDERS.GA4) {
+      const results = await ga4Processor.processMessage({ message, parsed });
+      const statuses = results.map((result) => result.status);
+      await db.markMessageProcessed({
+        uidValidity: message.uidValidity,
+        imapUid: message.uid,
+        messageId: normalizeMessageId(parsed.messageId || envelopeMessageId),
+        fromAddress: filterFromAddresses[0] || null,
+        subject: filterSubject || null,
+        status: 'ga4_processed',
+        notes: `GA4 attachment statuses: ${statuses.join(', ') || 'none'}`
+      });
+      messageLogger.info({ provider: 'ga4', attachmentCount: results.length, statuses }, 'GA4 message processed');
+      return true;
     }
 
     const messageId = normalizeMessageId(parsed.messageId || envelopeMessageId);
