@@ -65,6 +65,15 @@ export function parseReportingPeriod(value) {
   return start && end && start <= end ? { start, end } : null;
 }
 
+export function isCompleteCalendarMonth(period) {
+  if (!period?.start || !period?.end) return false;
+  const { start, end } = period;
+  return start.getUTCFullYear() === end.getUTCFullYear() &&
+    start.getUTCMonth() === end.getUTCMonth() &&
+    start.getUTCDate() === 1 &&
+    end.getUTCDate() === new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 export function formatBatchDate(period) {
   if (!period?.end) return '';
   const batch = new Date(Date.UTC(period.end.getUTCFullYear(), period.end.getUTCMonth() + 1, 1));
