@@ -5,6 +5,7 @@ import {
   expandGa4Destination,
   extractPdfText,
   formatBatchDate,
+  isCompleteCalendarMonth,
   normalizeGa4Identifier,
   parseGa4BodyMetadata,
   parseReportingPeriod,
@@ -25,10 +26,10 @@ async function persistPending(buffer, pendingDir, checksum) {
 
 function exactMatches(text, candidates, field) {
   const normalizedText = normalizeGa4Identifier(text);
-  return candidates.filter((candidate) => {
-    const value = normalizeGa4Identifier(candidate[field]);
-    return value && (normalizedText === value || normalizedText.includes(value));
-  });
+  if (!normalizedText) return [];
+  return candidates.filter((candidate) =>
+    normalizeGa4Identifier(candidate[field]) === normalizedText
+  );
 }
 
 export function createGa4Processor({ db, uploader, config, logger }) {
@@ -53,22 +54,24 @@ export function createGa4Processor({ db, uploader, config, logger }) {
     }
 
     const bodyMetadata = parseGa4BodyMetadata(parsed);
-    const searchableText = `${bodyMetadata.propertyName} ${bodyMetadata.reportTitle} ${parsed.subject} ${pdfText}`;
+    // Only the structured GA4 email metadata is authoritative for routing.
+    // Searching arbitrary PDF text can match unrelated property names.
     const routes = await db.listGa4PropertyRoutes();
     let propertyMatches = bodyMetadata.propertyName
       ? routes.filter((route) => normalizeGa4Identifier(route.propertyName) === normalizeGa4Identifier(bodyMetadata.propertyName) && route.isActive)
       : [];
-    if (propertyMatches.length !== 1) propertyMatches = exactMatches(searchableText, routes.filter((route) => route.isActive), 'propertyName');
+    // Never fall back to substring matches in PDF text or email subject.
     const route = propertyMatches.length === 1 ? propertyMatches[0] : null;
 
     const definitions = await db.listGa4ReportDefinitions();
-    const eligibleDefinitions = definitions.filter((definition) => definition.isActive && (!route || definition.propertyKey === '*' || definition.propertyKey === route.propertyKey));
+    const eligibleDefinitions = definitions.filter((definition) => definition.isActive && route && (definition.propertyKey === '*' || definition.propertyKey === route.propertyKey));
     let reportMatches = bodyMetadata.reportTitle
       ? eligibleDefinitions.filter((definition) => normalizeGa4Identifier(definition.reportTitle) === normalizeGa4Identifier(bodyMetadata.reportTitle))
       : [];
-    if (reportMatches.length !== 1) reportMatches = exactMatches(searchableText, eligibleDefinitions, 'reportTitle');
+    // Report titles must also match exactly to avoid filename collisions.
     const definition = reportMatches.length === 1 ? reportMatches[0] : null;
-    const period = parseReportingPeriod(pdfText) || parseReportingPeriod(`${parsed.text} ${parsed.subject}`);
+    const parsedPeriod = parseReportingPeriod(pdfText) || parseReportingPeriod(`${parsed.text} ${parsed.subject}`);
+    const period = isCompleteCalendarMonth(parsedPeriod) ? parsedPeriod : null;
     const batchDate = formatBatchDate(period);
 
     let status = 'pending_review';
