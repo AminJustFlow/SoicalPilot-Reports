@@ -7,6 +7,7 @@ import {
   buildGa4Filename,
   expandGa4Destination,
   formatBatchDate,
+  isCompleteCalendarMonth,
   normalizeGa4Identifier,
   parseGa4BodyMetadata,
   parseReportingPeriod,
@@ -97,4 +98,12 @@ test('GA4 collision mode never creates an arbitrary numeric suffix', async () =>
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }
+});
+
+test('only complete calendar months qualify for monthly GA4 archiving', () => {
+  assert.equal(isCompleteCalendarMonth(parseReportingPeriod('September 1–30, 2026')), true);
+  assert.equal(isCompleteCalendarMonth(parseReportingPeriod('September 2–30, 2026')), false);
+  assert.equal(isCompleteCalendarMonth(parseReportingPeriod('September 1–29, 2026')), false);
+  assert.equal(isCompleteCalendarMonth(parseReportingPeriod('February 1–28, 2028')), false);
+  assert.equal(isCompleteCalendarMonth(parseReportingPeriod('February 1–29, 2028')), true);
 });
