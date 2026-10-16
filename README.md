@@ -68,6 +68,7 @@ Production-ready Node.js 20+ service that:
    - `IMAP_OAUTH_REFRESH_TOKEN=<valid refresh token for mailbox user>`
 
 Notes:
+
 - Basic IMAP auth (`AUTHENTICATE PLAIN`) is blocked in many Microsoft tenants.
 - If you use `IMAP_AUTH_METHOD=password`, the mailbox must explicitly allow legacy IMAP auth.
 
@@ -113,6 +114,7 @@ Use this when running on a machine without Dropbox desktop sync, including AWS.
 For AWS, use the refresh-token setup. Dropbox access tokens are commonly short-lived; the service can now exchange `DROPBOX_REFRESH_TOKEN` for fresh access tokens automatically.
 
 Dropbox Business / team folders:
+
 - Keep the app as a user/file app with Full Dropbox access when you only need folders the connected user can access.
 - Do not add `team_data.*` scopes unless you are building a team-admin app.
 - Set `DROPBOX_PATH_ROOT_MODE=auto` so the service roots file calls at the account/team root when Dropbox reports a separate team root namespace.
@@ -205,13 +207,15 @@ http://127.0.0.1:3100/routes
 Each rule maps one route key to one Dropbox folder path.
 Use lowercase keys in UI (`fmb`, `sfg`, `900`, or full email).
 In manual mode:
+
 1. Click `Fetch Route Keys`
 2. Create folder rules for suggested keys
 3. Click `Start Downloading`
 
 Tip (Windows + `UPLOAD_BACKEND=local_fs`):
+
 - In the route form, use `Browse...` next to `Dropbox Folder` to open the in-page folder browser (scoped to `LOCAL_DROPBOX_ROOT`).
-Tip (rules portability):
+  Tip (rules portability):
 - Use `Export Rules` to back up mappings.
 - Use `Import Rules` to restore with `Merge` (upsert) or `Replace` (overwrite all existing rules).
 
@@ -281,3 +285,110 @@ Structured JSON logs include:
 - contextual metadata (uid, retries, upload path, etc.)
 
 Use `LOG_LEVEL` to control verbosity (`debug`, `info`, `warn`, `error`).
+
+## Recovery Runbook: Microsoft Token and SSL Certificate
+
+Use this runbook when `Fetch Route Keys` reports that the Microsoft refresh token
+expired, or when the HTTPS certificate needs attention.
+
+### Replace an Expired Microsoft Refresh Token
+
+The Entra app registration must contain this Web redirect URI:
+
+```text
+http://localhost:53682/callback
+```
+
+On the local Windows computer containing this repository:
+
+1. Open PowerShell in the project directory.
+2. Install dependencies if needed, then start reauthorization:
+
+   ```powershell
+   npm install
+   npm run microsoft:reauthorize
+   ```
+
+3. If a browser does not open, copy the Microsoft sign-in URL printed in the
+   terminal and open it manually.
+4. Sign in as the mailbox configured by `IMAP_USER` and approve access.
+5. Wait for `Authorization succeeded`. The helper safely replaces
+   `IMAP_OAUTH_REFRESH_TOKEN` in the local `.env` and clears the old access token.
+6. Open the local `.env` in a text editor and copy the new
+   `IMAP_OAUTH_REFRESH_TOKEN` value. Never paste this value into chat, logs, or a
+   shell command that could save it in command history.
+
+On the EC2 instance:
+
+1. Change to the directory containing `docker-compose.yml` and `.env`:
+
+   ```bash
+   cd /path/to/SoicalPilot-Reports
+   ```
+
+2. Edit `.env` and replace only the `IMAP_OAUTH_REFRESH_TOKEN` value:
+
+   ```bash
+   nano .env
+   ```
+
+   In `nano`, save with `Ctrl+O`, press `Enter`, and exit with `Ctrl+X`.
+
+3. Recreate the container so it loads the changed environment. A plain
+   `docker restart` does not reload values from `.env`.
+
+   ```bash
+   sudo docker compose up -d --force-recreate socialpilot-dropbox
+   ```
+
+4. Wait for startup and verify the service:
+
+   ```bash
+   sleep 15
+   sudo docker compose ps
+   curl -fsS http://127.0.0.1:3100/health
+   ```
+
+   The health request should print `OK`.
+
+5. If health fails or `Fetch Route Keys` still fails, inspect logs:
+
+   ```bash
+   sudo docker compose logs --tail=200 socialpilot-dropbox
+   ```
+
+### Check or Renew the HTTPS Certificate
+
+First determine whether HTTPS is provided by Certbot on EC2 or by AWS Certificate
+Manager (ACM).
+
+For an Nginx/Certbot installation on EC2:
+
+```bash
+sudo systemctl is-active nginx
+sudo certbot certificates
+sudo systemctl list-timers --all | grep -i certbot
+sudo certbot renew --dry-run
+```
+
+If the dry run succeeds, normal renewal should be automatic. To renew a
+certificate that is currently due and reload Nginx:
+
+```bash
+sudo certbot renew
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Do not routinely use `--force-renewal`; unnecessary forced renewals can hit the
+certificate authority's rate limits.
+
+If HTTPS uses an Application Load Balancer or CloudFront with ACM, do not run
+Certbot on EC2. In the AWS Certificate Manager console, confirm that:
+
+- the certificate status is `Issued`;
+- the certificate is attached to the load balancer or CloudFront distribution;
+- the ACM DNS-validation CNAME record still exists.
+
+An attached, DNS-validated ACM certificate renews automatically while its
+validation record remains in DNS.
