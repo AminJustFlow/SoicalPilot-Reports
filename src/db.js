@@ -4,6 +4,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { parseReportMetadataFromLink } from './linkExtractor.js';
 import { parseSubjectRouteCandidate } from './routeKey.js';
+import { standardGa4ReportLabel } from './ga4Parser.js';
 
 function normalizeUidValidity(value) {
   const normalized = String(value ?? '').trim();
@@ -774,7 +775,7 @@ export async function initDb({ dbPath, logger }) {
       const automaticClientCode = folder.match(/\(([A-Za-z0-9]+)\)/)?.[1]?.toUpperCase() || '';
       const values = [
         name,
-        String(clientCode || '').trim() || automaticClientCode,
+        (String(clientCode || '').trim() || automaticClientCode).toUpperCase(),
         String(clientName || '').trim() || automaticPropertyLabel,
         String(propertyLabel || '').trim() || automaticPropertyLabel,
         folder
@@ -784,6 +785,9 @@ export async function initDb({ dbPath, logger }) {
       }
       if (!values[1]) {
         throw new Error('The Dropbox folder must contain a client code in parentheses, for example (SFG)');
+      }
+      if (!/^[A-Z0-9]+$/.test(values[1])) {
+        throw new Error('GA4 client code must contain only letters and numbers');
       }
       await db.run(`INSERT INTO ga4_property_routes
         (property_key, property_name, client_code, client_name, property_label, destination_template, is_active)
@@ -819,7 +823,7 @@ export async function initDb({ dbPath, logger }) {
       const property = propertyKey === '*' ? '*' : normalizeRouteKey(propertyKey);
       const key = normalizeRouteKey(reportKey || reportTitle);
       const title = String(reportTitle || '').trim();
-      const label = (String(reportLabel || '').trim() || title.replace(/[^A-Za-z0-9]+/g, '_'))
+      const label = (standardGa4ReportLabel(title) || String(reportLabel || '').trim() || title.replace(/[^A-Za-z0-9]+/g, '_'))
         .replace(/\.pdf$/i, '').replace(/^_+|_+$/g, '');
       if (!property || !key || !title || !label) throw new Error('All GA4 report definition fields are required');
 

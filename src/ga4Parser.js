@@ -5,9 +5,28 @@ const MONTHS = new Map([
   ['july', 6], ['august', 7], ['september', 8], ['october', 9], ['november', 10], ['december', 11]
 ]);
 
+const STANDARD_REPORT_LABELS = new Map([
+  ['reports_snapshot', 'Reports_snapshot'],
+  ['traffic_acquisition_session_source_medium', 'Traffic_acquisition_Session_source_medium'],
+  ['user_acquisition_first_user_primary_channel_group', 'User_acquisition_First_user_primary_channel_group_(Default_Channel_Group)'],
+  ['user_acquisition_first_user_campaign', 'User_acquisition_First_user_campaign'],
+  ['campaign_content_and_term', 'Campaign_content_and_term'],
+  ['pages_and_screens_page_path_and_screen_class', 'Pages_and_screens_Page_path_and_screen_class'],
+  ['pages_and_screens', 'Pages_and_screens_Page_path_and_screen_class'],
+  ['landing_page', 'Landing_page_Landing_page'],
+  ['exit_pages', 'Exit_pages'],
+  ['events', 'Events'],
+  ['page_not_found', 'Page_not_found'],
+  ['searched_terms', 'Searched_terms']
+]);
+
 export function normalizeGa4Identifier(value) {
   return String(value || '').trim().toLowerCase().replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/_+/g, '_');
+}
+
+export function standardGa4ReportLabel(reportTitle) {
+  return STANDARD_REPORT_LABELS.get(normalizeGa4Identifier(reportTitle)) || null;
 }
 
 export function validatePdfAttachment(attachment, { maxBytes = 25 * 1024 * 1024 } = {}) {
@@ -92,13 +111,15 @@ export function reportingMonthName(period) {
   return period?.start ? new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' }).format(period.start) : '';
 }
 
-export function buildGa4Filename({ batchDate, clientCode, propertyLabel, reportLabel }) {
+export function buildGa4Filename({ batchDate, clientCode, reportLabel }) {
   const clean = (value, separator) => String(value || '').trim().replace(/\.pdf$/i, '')
     .replace(/[^A-Za-z0-9]+/g, separator).replace(new RegExp(`\\${separator}+`, 'g'), separator)
     .replace(new RegExp(`^\\${separator}|\\${separator}$`, 'g'), '');
   const date = String(batchDate || '').trim();
   if (!/^\d{6}$/.test(date)) throw new Error('GA4 batch date must be YYMMDD');
-  const parts = [date, clean(clientCode, '-'), clean(propertyLabel, '-'), clean(reportLabel, '_')];
+  const code = clean(clientCode, '-').toUpperCase();
+  if (!/^[A-Z0-9]+$/.test(code)) throw new Error('GA4 client code must contain only letters and numbers');
+  const parts = [date, code, clean(reportLabel, '_')];
   if (parts.some((part) => !part)) throw new Error('GA4 filename fields must not be empty');
   return `${parts.join('-')}.pdf`;
 }

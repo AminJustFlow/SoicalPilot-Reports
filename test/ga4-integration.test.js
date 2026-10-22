@@ -41,9 +41,9 @@ test('configured Socha report routes end-to-end into the shared monthly folder',
     });
 
     assert.equal(result[0].status, 'uploaded');
-    assert.equal(result[0].generatedFilename, '261001-SOC-Boulder-Way-Reports_snapshot.pdf');
+    assert.equal(result[0].generatedFilename, '261001-SOC-Reports_snapshot.pdf');
     assert.equal(result[0].destinationFolder, '/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/261001-SOC-September-GA4-Analytics');
-    const uploaded = path.join(uploadRoot, 'Socha-Companies-(SOC)', 'Projects', 'Analytics', 'Website-Analytics', '261001-SOC-September-GA4-Analytics', '261001-SOC-Boulder-Way-Reports_snapshot.pdf');
+    const uploaded = path.join(uploadRoot, 'Socha-Companies-(SOC)', 'Projects', 'Analytics', 'Website-Analytics', '261001-SOC-September-GA4-Analytics', '261001-SOC-Reports_snapshot.pdf');
     assert.equal((await fs.stat(uploaded)).isFile(), true);
   } finally {
     await db.close();
