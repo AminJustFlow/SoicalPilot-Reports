@@ -20,6 +20,12 @@ GA4 support is disabled by default, so existing SocialPilot installations retain
 3. Add exact report definitions and canonical filename labels.
 4. Set `GA4_ENABLED=true` and restart the service.
 
+A reviewed JSON configuration can also be imported into an explicitly selected database. The command refuses the configured production database unless `--allow-production-db` is intentionally supplied:
+
+```bash
+npm run ga4:import-config -- --db ./data/ga4-validation.sqlite --config ./config/socha-ga4.json
+```
+
 The expected sender is `noreply-analytics@google.com`. Attached PDFs are validated by MIME type, `%PDF-` signature, and configured size limit. Only exact normalized property/report mappings are used; ambiguous or unknown metadata is held for review.
 
 Socha reports follow the superseding convention:

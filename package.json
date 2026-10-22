@@ -12,6 +12,7 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "microsoft:reauthorize": "node scripts/microsoft-reauthorize.js",
+    "ga4:import-config": "node scripts/import-ga4-config.js",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"
   },
