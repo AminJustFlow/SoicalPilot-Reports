@@ -1250,7 +1250,7 @@ function toErrorResponse(error) {
   };
 }
 
-function renderGa4Page() {
+function renderLegacyGa4Page() {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GA4 Report Routing</title><style>body{font-family:system-ui;max-width:1200px;margin:32px auto;padding:0 16px;color:#172033}fieldset{margin:20px 0;padding:16px;border:1px solid #ccd3df;border-radius:8px}input{padding:8px;margin:4px;min-width:180px}button{padding:8px 12px;margin:4px}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;font-size:14px}.pending{color:#9a5b00}.ok{color:#08783e}.err{color:#b42318}code{font-size:12px}</style></head><body>
   <p><a href="/routes">← SocialPilot routes</a></p><h1>Google Analytics 4</h1><p>GA4 is disabled by default. Set <code>GA4_ENABLED=true</code> only after configuring exact property and report mappings.</p>
@@ -1269,6 +1269,34 @@ function renderGa4Page() {
   async function saveDefinition(){try{await api('/api/ga4/reports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({propertyKey:defProperty.value||'*',reportKey:key(reportTitle.value),reportTitle:reportTitle.value,reportLabel:reportLabel.value})});msg('Report definition saved');await load()}catch(e){msg(e.message,true)}}
   async function delRoute(k){await api('/api/ga4/properties/'+k,{method:'DELETE'});await load()} async function delDef(p,k){await api('/api/ga4/reports/'+p+'/'+k,{method:'DELETE'});await load()} async function retry(id){try{const r=await api('/api/ga4/pending/'+id+'/retry',{method:'POST'});msg('Retry result: '+r.result.status);await load()}catch(e){msg(e.message,true)}} load().catch(e=>msg(e.message,true));
   </script></body></html>`;
+}
+
+function renderGa4Page() {
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GA4 Report Routing</title><style>body{font-family:system-ui;max-width:1200px;margin:32px auto;padding:0 16px;color:#172033}fieldset,details{margin:20px 0;padding:16px;border:1px solid #ccd3df;border-radius:8px}input{padding:8px;margin:4px;min-width:180px}button{padding:8px 12px;margin:4px}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left;font-size:14px}.pending{color:#9a5b00}.ok{color:#08783e}.err{color:#b42318}code{font-size:12px}.destination{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.destination input{flex:1;min-width:420px}.muted{color:#5f6b7a}.summary{cursor:pointer;font-weight:600}</style></head><body>
+  <p><a href="/routes">&larr; SocialPilot routes</a></p><h1>Google Analytics 4</h1><p>The known Socha properties and report names are detected automatically. Normally, you only need to choose where the monthly reports are saved.</p>
+  <fieldset><legend>Dropbox destination</legend><div class="destination"><input id="sharedDestination" placeholder="Dropbox folder template"><button id="saveDestination">Save for all Socha properties</button></div><p class="muted">Available values: <code>{batchDate}</code> and <code>{reportingMonth}</code>. Existing property and report rules are preserved.</p></fieldset>
+  <details><summary class="summary">Advanced overrides</summary><fieldset><legend>Property override</legend><input id="propertyName" placeholder="Exact GA4 property name"><input id="clientCode" placeholder="Client code (SOC)"><input id="clientName" placeholder="Client name"><input id="propertyLabel" placeholder="Filename property label"><input id="destinationTemplate" placeholder="Folder template" size="50"><button id="saveRoute">Save property</button></fieldset><fieldset><legend>Report override</legend><input id="defProperty" value="*" placeholder="Property key or *"><input id="reportTitle" placeholder="Exact GA4 report title"><input id="reportLabel" placeholder="Filename report label"><button id="saveDefinition">Save report</button></fieldset></details>
+  <p id="status"></p><h2>Property routes</h2><table><thead><tr><th>Property</th><th>Client</th><th>Filename label</th><th>Destination template</th><th></th></tr></thead><tbody id="routes"></tbody></table>
+  <h2>Report definitions</h2><table><thead><tr><th>Property</th><th>Report title</th><th>Filename label</th><th></th></tr></thead><tbody id="defs"></tbody></table>
+  <h2>Pending reports</h2><table><thead><tr><th>Property</th><th>Report</th><th>Status</th><th>Reason</th><th></th></tr></thead><tbody id="pending"></tbody></table>
+  <script src="/ga4.js" defer></script></body></html>`;
+}
+
+function renderGa4Script() {
+  return `
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const key=s=>String(s||'').trim().toLowerCase().replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  async function api(url,options){const r=await fetch(url,options);const b=await r.json().catch(()=>({}));if(!r.ok)throw Error(b.error||'Request failed');return b}
+  function msg(t,e=false){status.textContent=t;status.className=e?'err':'ok'}
+  let propertyRules=[];
+  async function load(){const [r,d,p]=await Promise.all([api('/api/ga4/properties'),api('/api/ga4/reports'),api('/api/ga4/pending')]);propertyRules=r.rules;const soc=propertyRules.filter(x=>x.clientCode==='SOC');if(soc.length&&!sharedDestination.value)sharedDestination.value=soc[0].destinationTemplate;routes.innerHTML=propertyRules.map(x=>'<tr><td>'+esc(x.propertyName)+'<br><code>'+esc(x.propertyKey)+'</code></td><td>'+esc(x.clientCode)+' &mdash; '+esc(x.clientName)+'</td><td>'+esc(x.propertyLabel)+'</td><td>'+esc(x.destinationTemplate)+'</td><td><button class="delete-route" data-key="'+esc(x.propertyKey)+'">Delete</button></td></tr>').join('');defs.innerHTML=d.definitions.map(x=>'<tr><td><code>'+esc(x.propertyKey)+'</code></td><td>'+esc(x.reportTitle)+'</td><td>'+esc(x.reportLabel)+'</td><td><button class="delete-definition" data-property="'+esc(x.propertyKey)+'" data-key="'+esc(x.reportKey)+'">Delete</button></td></tr>').join('');pending.innerHTML=p.attachments.map(x=>'<tr><td>'+esc(x.propertyName||x.propertyKey||'Unknown')+'</td><td>'+esc(x.reportTitle||x.reportKey||'Unknown')+'</td><td class="pending">'+esc(x.status)+'</td><td>'+esc(x.errorReason||'')+'</td><td><button class="retry" data-id="'+Number(x.id)+'">Retry</button></td></tr>').join('')}
+  async function saveSharedDestination(){try{const value=sharedDestination.value.trim();if(!value)throw Error('Enter a Dropbox destination folder');const soc=propertyRules.filter(x=>x.clientCode==='SOC');if(!soc.length)throw Error('No Socha property routes were found');await Promise.all(soc.map(x=>api('/api/ga4/properties',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...x,destinationTemplate:value})})));msg('Dropbox destination saved for '+soc.length+' Socha properties');await load()}catch(e){msg(e.message,true)}}
+  async function saveRouteOverride(){try{await api('/api/ga4/properties',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({propertyKey:key(propertyName.value),propertyName:propertyName.value,clientCode:clientCode.value,clientName:clientName.value,propertyLabel:propertyLabel.value,destinationTemplate:destinationTemplate.value})});msg('Property route saved');await load()}catch(e){msg(e.message,true)}}
+  async function saveReportOverride(){try{await api('/api/ga4/reports',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({propertyKey:defProperty.value||'*',reportKey:key(reportTitle.value),reportTitle:reportTitle.value,reportLabel:reportLabel.value})});msg('Report definition saved');await load()}catch(e){msg(e.message,true)}}
+  async function delRoute(k){await api('/api/ga4/properties/'+encodeURIComponent(k),{method:'DELETE'});await load()} async function delDef(p,k){await api('/api/ga4/reports/'+encodeURIComponent(p)+'/'+encodeURIComponent(k),{method:'DELETE'});await load()} async function retry(id){try{const r=await api('/api/ga4/pending/'+id+'/retry',{method:'POST'});msg('Retry result: '+r.result.status);await load()}catch(e){msg(e.message,true)}}
+  saveDestination.addEventListener('click',saveSharedDestination);document.getElementById('saveRoute').addEventListener('click',saveRouteOverride);document.getElementById('saveDefinition').addEventListener('click',saveReportOverride);routes.addEventListener('click',e=>{const b=e.target.closest('.delete-route');if(b)delRoute(b.dataset.key).catch(x=>msg(x.message,true))});defs.addEventListener('click',e=>{const b=e.target.closest('.delete-definition');if(b)delDef(b.dataset.property,b.dataset.key).catch(x=>msg(x.message,true))});pending.addEventListener('click',e=>{const b=e.target.closest('.retry');if(b)retry(Number(b.dataset.id))});load().catch(e=>msg(e.message,true));
+  `;
 }
 
 export async function startWebServer({
@@ -1332,6 +1360,7 @@ export async function startWebServer({
   });
 
   app.get('/ga4', (_req, res) => res.status(200).type('html').send(renderGa4Page()));
+  app.get('/ga4.js', (_req, res) => res.status(200).type('application/javascript').send(renderGa4Script()));
   app.get('/api/ga4/properties', async (_req, res) => res.json({ rules: await db.listGa4PropertyRoutes() }));
   app.post('/api/ga4/properties', async (req, res) => { try { res.json({ rule: await db.upsertGa4PropertyRoute(req.body || {}) }); } catch (error) { res.status(400).json(toErrorResponse(error)); } });
   app.delete('/api/ga4/properties/:key', async (req, res) => res.json({ deleted: await db.deleteGa4PropertyRoute(decodeURIComponent(req.params.key)) }));
