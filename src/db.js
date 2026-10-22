@@ -768,9 +768,18 @@ export async function initDb({ dbPath, logger }) {
 
     async upsertGa4PropertyRoute({ propertyKey, propertyName, clientCode, clientName, propertyLabel, destinationTemplate, isActive = true }) {
       const key = normalizeRouteKey(propertyKey);
-      const values = [propertyName, clientCode, clientName, propertyLabel, destinationTemplate]
-        .map((value) => String(value || '').trim());
-      if (!key || values.some((value) => !value)) throw new Error('All GA4 property route fields are required');
+      const name = String(propertyName || '').trim();
+      const automaticPropertyLabel = name.replace(/\s+GA4\s*$/i, '').trim() || name;
+      const values = [
+        name,
+        String(clientCode || '').trim(),
+        String(clientName || '').trim(),
+        String(propertyLabel || '').trim() || automaticPropertyLabel,
+        String(destinationTemplate || '').trim()
+      ];
+      if (!key || !values[0] || !values[1] || !values[2] || !values[4]) {
+        throw new Error('GA4 property name, client code, client name, and Dropbox folder are required');
+      }
       await db.run(`INSERT INTO ga4_property_routes
         (property_key, property_name, client_code, client_name, property_label, destination_template, is_active)
         VALUES (?, ?, ?, ?, ?, ?, ?)

@@ -13,9 +13,11 @@ test('GA4 migrations preserve SocialPilot tables and enforce mapping/collision r
   try {
     await db.upsertRoutingRule({ routeKey: 'fmb', dropboxFolder: '/SocialPilot/FMB' });
     await db.upsertGa4PropertyRoute({ propertyKey: 'socha_companies_ga4', propertyName: 'Socha Companies GA4', clientCode: 'SOC', clientName: 'Socha Companies', propertyLabel: 'Socha Companies', destinationTemplate: '/Socha/{batchDate}-SOC-{reportingMonth}-GA4-Analytics' });
+    const automaticLabel = await db.upsertGa4PropertyRoute({ propertyKey: 'sfg_ga4', propertyName: 'SFG GA4', clientCode: 'SFG', clientName: 'SFG', destinationTemplate: '/SFG/{batchDate}-{reportingMonth}' });
+    assert.equal(automaticLabel.propertyLabel, 'SFG');
     await db.upsertGa4ReportDefinition({ reportTitle: 'Reports snapshot', reportLabel: 'Reports_snapshot' });
     assert.equal((await db.listRoutingRules()).length, 1);
-    assert.equal((await db.listGa4PropertyRoutes()).length, 1);
+    assert.equal((await db.listGa4PropertyRoutes()).length, 2);
     assert.equal((await db.listGa4ReportDefinitions()).length, 1);
     await assert.rejects(() => db.upsertGa4ReportDefinition({ reportTitle: 'Different report', reportLabel: 'Reports_snapshot' }), /conflicts/);
     await db.saveGa4Attachment({
