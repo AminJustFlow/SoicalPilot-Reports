@@ -74,6 +74,14 @@ export function isCompleteCalendarMonth(period) {
     end.getUTCDate() === new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() + 1, 0)).getUTCDate();
 }
 
+export function previousCompleteCalendarMonth(value) {
+  const received = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(received.getTime())) return null;
+  const end = new Date(Date.UTC(received.getUTCFullYear(), received.getUTCMonth(), 0));
+  const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1));
+  return { start, end };
+}
+
 export function formatBatchDate(period) {
   if (!period?.end) return '';
   const batch = new Date(Date.UTC(period.end.getUTCFullYear(), period.end.getUTCMonth() + 1, 1));

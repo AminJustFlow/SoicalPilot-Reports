@@ -11,6 +11,7 @@ import {
   normalizeGa4Identifier,
   parseGa4BodyMetadata,
   parseReportingPeriod,
+  previousCompleteCalendarMonth,
   validatePdfAttachment
 } from '../src/ga4Parser.js';
 import { extractSocialPilotLinks, formatDateForFilename } from '../src/linkExtractor.js';
@@ -27,6 +28,13 @@ test('mail parser exposes sanitized GA4 PDF attachments as buffers', async () =>
   assert.equal(parsed.attachments[0].filename, 'report.pdf');
   assert.equal(Buffer.isBuffer(parsed.attachments[0].content), true);
   assert.equal(validatePdfAttachment(parsed.attachments[0]).valid, true);
+});
+
+test('falls back to the previous complete month for scheduled reports without a printed range', () => {
+  const period = previousCompleteCalendarMonth(new Date('2026-10-22T12:00:00Z'));
+  assert.equal(period.start.toISOString(), '2026-09-01T00:00:00.000Z');
+  assert.equal(period.end.toISOString(), '2026-09-30T00:00:00.000Z');
+  assert.equal(formatBatchDate(period), '261001');
 });
 
 test('recognizes GA4 only from the exact sender with a real PDF attachment', () => {

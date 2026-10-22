@@ -9,6 +9,7 @@ import {
   normalizeGa4Identifier,
   parseGa4BodyMetadata,
   parseReportingPeriod,
+  previousCompleteCalendarMonth,
   reportingMonthName,
   validatePdfAttachment
 } from './ga4Parser.js';
@@ -70,7 +71,8 @@ export function createGa4Processor({ db, uploader, config, logger }) {
       : [];
     // Report titles must also match exactly to avoid filename collisions.
     const definition = reportMatches.length === 1 ? reportMatches[0] : null;
-    const parsedPeriod = parseReportingPeriod(pdfText) || parseReportingPeriod(`${parsed.text} ${parsed.subject}`);
+    const parsedPeriod = parseReportingPeriod(pdfText) || parseReportingPeriod(`${parsed.text} ${parsed.subject}`) ||
+      previousCompleteCalendarMonth(parsed.date || message.internalDate);
     const period = isCompleteCalendarMonth(parsedPeriod) ? parsedPeriod : null;
     const batchDate = formatBatchDate(period);
 
@@ -155,7 +157,7 @@ export function createGa4Processor({ db, uploader, config, logger }) {
       if (!record?.pendingFilePath) throw new Error('Pending GA4 attachment file is unavailable');
       const content = await fs.readFile(record.pendingFilePath);
       return processAttachment({
-        message: { uid: record.imapUid, uidValidity: record.uidValidity },
+        message: { uid: record.imapUid, uidValidity: record.uidValidity, internalDate: record.createdAt },
         parsed: {
           messageId: '',
           subject: '',
