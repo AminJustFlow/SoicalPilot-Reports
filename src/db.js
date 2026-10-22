@@ -769,16 +769,21 @@ export async function initDb({ dbPath, logger }) {
     async upsertGa4PropertyRoute({ propertyKey, propertyName, clientCode, clientName, propertyLabel, destinationTemplate, isActive = true }) {
       const key = normalizeRouteKey(propertyKey);
       const name = String(propertyName || '').trim();
-      const automaticPropertyLabel = name.replace(/\s+GA4\s*$/i, '').trim() || name;
+      const automaticPropertyLabel = name.replace(/^GA4\s*[-–—:]\s*/i, '').replace(/\s+GA4\s*$/i, '').trim() || name;
+      const folder = String(destinationTemplate || '').trim();
+      const automaticClientCode = folder.match(/\(([A-Za-z0-9]+)\)/)?.[1]?.toUpperCase() || '';
       const values = [
         name,
-        String(clientCode || '').trim(),
-        String(clientName || '').trim(),
+        String(clientCode || '').trim() || automaticClientCode,
+        String(clientName || '').trim() || automaticPropertyLabel,
         String(propertyLabel || '').trim() || automaticPropertyLabel,
-        String(destinationTemplate || '').trim()
+        folder
       ];
-      if (!key || !values[0] || !values[1] || !values[2] || !values[4]) {
-        throw new Error('GA4 property name, client code, client name, and Dropbox folder are required');
+      if (!key || !values[0] || !values[4]) {
+        throw new Error('Choose a detected GA4 report and a Dropbox folder');
+      }
+      if (!values[1]) {
+        throw new Error('The Dropbox folder must contain a client code in parentheses, for example (SFG)');
       }
       await db.run(`INSERT INTO ga4_property_routes
         (property_key, property_name, client_code, client_name, property_label, destination_template, is_active)
@@ -814,7 +819,8 @@ export async function initDb({ dbPath, logger }) {
       const property = propertyKey === '*' ? '*' : normalizeRouteKey(propertyKey);
       const key = normalizeRouteKey(reportKey || reportTitle);
       const title = String(reportTitle || '').trim();
-      const label = String(reportLabel || '').trim().replace(/\.pdf$/i, '');
+      const label = (String(reportLabel || '').trim() || title.replace(/[^A-Za-z0-9]+/g, '_'))
+        .replace(/\.pdf$/i, '').replace(/^_+|_+$/g, '');
       if (!property || !key || !title || !label) throw new Error('All GA4 report definition fields are required');
 
       const collision = await db.get(`SELECT report_key AS reportKey FROM ga4_report_definitions
