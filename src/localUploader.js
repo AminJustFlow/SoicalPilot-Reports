@@ -111,7 +111,7 @@ export function createLocalUploader({ localRoot, logger, retryConfig }) {
   const resolvedRoot = path.resolve(localRoot);
 
   return {
-    async uploadPdf({ buffer, destinationFolder, fileName }) {
+    async uploadPdf({ buffer, destinationFolder, fileName, conflictBehavior = 'suffix' }) {
       const safeFileName = sanitizeFileName(fileName);
 
       return withRetry({
@@ -158,6 +158,12 @@ export function createLocalUploader({ localRoot, logger, retryConfig }) {
               };
             } catch (error) {
               if (error?.code === 'EEXIST') {
+                if (conflictBehavior === 'error') {
+                  const conflict = new Error(`Destination file already exists: ${candidatePath}`);
+                  conflict.code = 'DESTINATION_CONFLICT';
+                  conflict.destinationPath = candidatePath;
+                  throw conflict;
+                }
                 continue;
               }
               throw error;

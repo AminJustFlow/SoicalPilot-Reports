@@ -8,9 +8,11 @@
     "node": ">=20"
   },
   "scripts": {
+    "test": "node --test",
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "microsoft:reauthorize": "node scripts/microsoft-reauthorize.js",
+    "ga4:import-config": "node scripts/import-ga4-config.js",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"
   },
@@ -21,6 +23,7 @@
     "express": "^4.21.2",
     "imapflow": "^1.0.181",
     "mailparser": "^3.7.2",
+    "pdfjs-dist": "^4.10.38",
     "pino": "^9.4.0",
     "pino-pretty": "^13.0.0",
     "sqlite": "^5.1.1",

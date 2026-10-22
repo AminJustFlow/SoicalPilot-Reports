@@ -9,6 +9,41 @@ Production-ready Node.js 20+ service that:
 5. Uploads to Dropbox with period-aware filenames using `yymmdd` date segments.
 6. Prevents duplicates across restarts using SQLite (IMAP UID + Message-ID).
 
+It can also process scheduled Google Analytics 4 PDF attachments when GA4 support is explicitly enabled and exact administrator-managed property/report mappings exist.
+
+## Google Analytics 4 Reports
+
+GA4 support is disabled by default, so existing SocialPilot installations retain their current behavior. To configure it:
+
+1. Open `/ga4` and add an exact GA4 property route. The property name must match the name sent by Google, such as `Socha Companies GA4`.
+2. Set the canonical client code, property filename label, and destination template.
+3. Add exact report definitions and canonical filename labels.
+4. Set `GA4_ENABLED=true` and restart the service.
+
+A reviewed JSON configuration can also be imported into an explicitly selected database. The command refuses the configured production database unless `--allow-production-db` is intentionally supplied:
+
+```bash
+npm run ga4:import-config -- --db ./data/ga4-validation.sqlite --config ./config/socha-ga4.json
+```
+
+The expected sender is `noreply-analytics@google.com`. Attached PDFs are validated by MIME type, `%PDF-` signature, and configured size limit. Only exact normalized property/report mappings are used; ambiguous or unknown metadata is held for review.
+
+Socha reports follow the superseding convention:
+
+```text
+YYMMDD-SOC-Property-Name-Report_type.pdf
+```
+
+For example, a September 2026 report becomes `261001-SOC-Boulder-Way-Reports_snapshot.pdf`. `GA4` and sequential report numbers are intentionally omitted. Use a shared monthly destination template to keep files directly in one monthly folder:
+
+```text
+/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics
+```
+
+Supported destination placeholders are `{batchDate}`, `{reportingMonth}`, and `{clientCode}`. No property subfolder is added automatically.
+
+If a generated destination and filename already belongs to the identical PDF, the duplicate is skipped. Different content at that same destination is held as `pending_collision`; the service never overwrites it or adds an arbitrary numeric suffix. Pending PDFs are retained under `GA4_PENDING_DIR` and can be retried from `/ga4` after mappings are corrected.
+
 ## Features
 
 - IMAP IDLE watcher with exponential backoff reconnect.
@@ -163,6 +198,9 @@ Common optional:
 - `DB_PATH` (default `./data/processed_messages.sqlite`)
 - `DROPBOX_FOLDER_900` (optional bootstrap rule for `900@justflownh.com`)
 - `MAIL_TO_DROPBOX_MAP_JSON` (optional bootstrap rules as JSON)
+- `GA4_ENABLED` (`true`/`false`, default `false`)
+- `GA4_MAX_PDF_BYTES` (default `26214400`, or 25 MiB)
+- `GA4_PENDING_DIR` (default `./data/ga4-pending`)
 
 See `.env.example` for full list.
 

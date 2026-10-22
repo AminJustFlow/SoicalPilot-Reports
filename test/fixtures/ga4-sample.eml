@@ -1,0 +1,21 @@
+From: Google Analytics <noreply-analytics@google.com>
+To: analytics@example.com
+Subject: Your scheduled Analytics report
+Message-ID: <sanitized-ga4@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="ga4-boundary"
+
+--ga4-boundary
+Content-Type: text/plain; charset=utf-8
+
+Hi,
+
+Attached is your Reports snapshot report on Socha Companies GA4 property.
+
+--ga4-boundary
+Content-Type: application/pdf; name="report.pdf"
+Content-Disposition: attachment; filename="report.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQgc2FuaXRpemVkIHRlc3QgZml4dHVyZQ==
+--ga4-boundary--

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "properties": [
+    { "propertyKey": "socha_companies_ga4", "propertyName": "Socha Companies GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Socha Companies", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "boulder_way_ga4", "propertyName": "Boulder Way GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Boulder Way", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "saddle_rock_ga4", "propertyName": "Saddle Rock GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Saddle Rock", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "the_timbers_ga4", "propertyName": "The Timbers GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "The Timbers", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "145_cilley_road_ga4", "propertyName": "145 Cilley Road GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "145 Cilley Road", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "cohas_overlook_ga4", "propertyName": "Cohas Overlook GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Cohas Overlook", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "evergreen_manchester_ga4", "propertyName": "Evergreen Manchester GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Evergreen Manchester", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "hidden_oak_ga4", "propertyName": "Hidden Oak GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Hidden Oak", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "stoneyview_way_ga4", "propertyName": "Stoneyview Way GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Stoneyview Way", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true },
+    { "propertyKey": "whitetail_crossing_ga4", "propertyName": "Whitetail Crossing GA4", "clientCode": "SOC", "clientName": "Socha Companies", "propertyLabel": "Whitetail Crossing", "destinationTemplate": "/Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics", "isActive": true }
+  ],
+  "reports": [
+    { "propertyKey": "*", "reportKey": "reports_snapshot", "reportTitle": "Reports snapshot", "reportLabel": "Reports_snapshot", "isActive": true },
+    { "propertyKey": "*", "reportKey": "traffic_acquisition_session_source_medium", "reportTitle": "Traffic Acquisition, Session Source / Medium", "reportLabel": "Traffic_acquisition", "isActive": true },
+    { "propertyKey": "*", "reportKey": "user_acquisition_first_user_primary_channel_group", "reportTitle": "User Acquisition, First User Primary Channel Group", "reportLabel": "User_acquisition_First_user_primary_channel_group", "isActive": true },
+    { "propertyKey": "*", "reportKey": "user_acquisition_first_user_campaign", "reportTitle": "User Acquisition, First User Campaign", "reportLabel": "User_acquisition_First_user_campaign", "isActive": true },
+    { "propertyKey": "*", "reportKey": "campaign_content_and_term", "reportTitle": "Campaign, Content and Term", "reportLabel": "Campaign_Content_and_term", "isActive": true },
+    { "propertyKey": "*", "reportKey": "pages_and_screens", "reportTitle": "Pages and Screens", "reportLabel": "Pages_and_screens", "isActive": true },
+    { "propertyKey": "socha_companies_ga4", "reportKey": "landing_page", "reportTitle": "Landing Page", "reportLabel": "Landing_page", "isActive": true },
+    { "propertyKey": "*", "reportKey": "exit_pages", "reportTitle": "Exit Pages", "reportLabel": "Exit_pages", "isActive": true },
+    { "propertyKey": "*", "reportKey": "events", "reportTitle": "Events", "reportLabel": "Events", "isActive": true },
+    { "propertyKey": "*", "reportKey": "page_not_found", "reportTitle": "Page Not Found", "reportLabel": "Page_not_found", "isActive": true },
+    { "propertyKey": "*", "reportKey": "searched_terms", "reportTitle": "Searched Terms", "reportLabel": "Searched_terms", "isActive": true }
+  ]
+}
