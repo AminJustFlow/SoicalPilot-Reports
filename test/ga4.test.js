@@ -68,9 +68,11 @@ test('uses the reusable client filename convention without a property name', () 
 test('standardizes the approved GA4 report names exactly', () => {
   assert.equal(standardGa4ReportLabel('Reports Snapshot'), 'Reports_snapshot');
   assert.equal(standardGa4ReportLabel('Traffic Acquisition, Session Source / Medium'), 'Traffic_acquisition_Session_source_medium');
+  assert.equal(standardGa4ReportLabel('Traffic acquisition: Session default channel group'), 'Traffic_acquisition_Session_source_medium');
   assert.equal(standardGa4ReportLabel('User Acquisition, First User Primary Channel Group'), 'User_acquisition_First_user_primary_channel_group_(Default_Channel_Group)');
   assert.equal(standardGa4ReportLabel('Pages and Screens, Page Path and Screen Class'), 'Pages_and_screens_Page_path_and_screen_class');
   assert.equal(standardGa4ReportLabel('Landing Page'), 'Landing_page_Landing_page');
+  assert.equal(standardGa4ReportLabel('Landing page: Landing page'), 'Landing_page_Landing_page');
 });
 
 test('uses the month after a partial or multi-month reporting period', () => {
