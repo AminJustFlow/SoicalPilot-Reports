@@ -16,7 +16,7 @@ It can also process scheduled Google Analytics 4 PDF attachments when GA4 suppor
 GA4 support is disabled by default, so existing SocialPilot installations retain their current behavior. To configure it:
 
 1. Open `/ga4` and add an exact GA4 property route. The property name must match the name sent by Google, such as `Socha Companies GA4`.
-2. Set the canonical client code, property filename label, and destination template.
+2. Choose the Dropbox destination. The client code is configurable, normalized to uppercase, and may be inferred from an explicit folder mapping such as `(SFG)`.
 3. Add exact report definitions and canonical filename labels.
 4. Set `GA4_ENABLED=true` and restart the service.
 
@@ -31,10 +31,10 @@ The expected sender is `noreply-analytics@google.com`. Attached PDFs are validat
 Socha reports follow the superseding convention:
 
 ```text
-YYMMDD-SOC-Property-Name-Report_type.pdf
+YYMMDD-{CLIENT_CODE}-{REPORT_NAME}.pdf
 ```
 
-For example, a September 2026 report becomes `261001-SOC-Boulder-Way-Reports_snapshot.pdf`. `GA4` and sequential report numbers are intentionally omitted. Use a shared monthly destination template to keep files directly in one monthly folder:
+For example, a September 2026 report becomes `261001-SOC-Reports_snapshot.pdf`. Property names, `GA4`, and sequential report numbers are intentionally omitted. Standard GA4 report titles are converted to the approved canonical report names. Use a shared monthly destination template to keep files directly in one monthly folder:
 
 ```text
 /Socha-Companies-(SOC)/Projects/Analytics/Website-Analytics/{batchDate}-SOC-{reportingMonth}-GA4-Analytics

@@ -12,6 +12,7 @@ import {
   parseGa4BodyMetadata,
   parseReportingPeriod,
   previousCompleteCalendarMonth,
+  standardGa4ReportLabel,
   validatePdfAttachment
 } from '../src/ga4Parser.js';
 import { extractSocialPilotLinks, formatDateForFilename } from '../src/linkExtractor.js';
@@ -56,12 +57,26 @@ test('creates the next-month batch date from the reporting period', () => {
   assert.equal(formatBatchDate(parseReportingPeriod('December 1-31, 2026')), '270101');
 });
 
-test('uses the superseding Socha filename convention', () => {
-  const name = buildGa4Filename({ batchDate: '261001', clientCode: 'SOC', propertyLabel: 'Boulder Way', reportLabel: 'Reports snapshot.pdf' });
-  assert.equal(name, '261001-SOC-Boulder-Way-Reports_snapshot.pdf');
+test('uses the reusable client filename convention without a property name', () => {
+  const name = buildGa4Filename({ batchDate: '261001', clientCode: 'soc', reportLabel: 'Reports_snapshot.pdf' });
+  assert.equal(name, '261001-SOC-Reports_snapshot.pdf');
   assert.equal(name.includes('-GA4-'), false);
   assert.equal(/-\d{2}-/.test(name), false);
   assert.equal(name.endsWith('.pdf.pdf'), false);
+});
+
+test('standardizes the approved GA4 report names exactly', () => {
+  assert.equal(standardGa4ReportLabel('Reports Snapshot'), 'Reports_snapshot');
+  assert.equal(standardGa4ReportLabel('Traffic Acquisition, Session Source / Medium'), 'Traffic_acquisition_Session_source_medium');
+  assert.equal(standardGa4ReportLabel('User Acquisition, First User Primary Channel Group'), 'User_acquisition_First_user_primary_channel_group_(Default_Channel_Group)');
+  assert.equal(standardGa4ReportLabel('Pages and Screens, Page Path and Screen Class'), 'Pages_and_screens_Page_path_and_screen_class');
+  assert.equal(standardGa4ReportLabel('Landing Page'), 'Landing_page_Landing_page');
+});
+
+test('uses the month after a partial or multi-month reporting period', () => {
+  assert.equal(formatBatchDate(parseReportingPeriod('August 1, 2026 - September 30, 2026')), '261001');
+  assert.equal(formatBatchDate(parseReportingPeriod('June 1, 2026 - October 21, 2026')), '261101');
+  assert.equal(formatBatchDate(parseReportingPeriod('October 1-20, 2026')), '261101');
 });
 
 test('expands one monthly destination without adding a property subfolder', () => {
@@ -97,7 +112,7 @@ test('GA4 collision mode never creates an arbitrary numeric suffix', async () =>
     logger: { info() {}, warn() {}, error() {} },
     retryConfig: { attempts: 1, baseDelayMs: 0, maxDelayMs: 1, jitterMs: 0 }
   });
-  const fileName = '261001-SOC-Boulder-Way-Reports_snapshot.pdf';
+  const fileName = '261001-SOC-Reports_snapshot.pdf';
   try {
     await uploader.uploadPdf({ buffer: Buffer.from('first'), destinationFolder: '/', fileName, conflictBehavior: 'error' });
     await assert.rejects(() => uploader.uploadPdf({ buffer: Buffer.from('different'), destinationFolder: '/', fileName, conflictBehavior: 'error' }), (error) => error.code === 'DESTINATION_CONFLICT');

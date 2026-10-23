@@ -5,7 +5,6 @@ import {
   expandGa4Destination,
   extractPdfText,
   formatBatchDate,
-  isCompleteCalendarMonth,
   normalizeGa4Identifier,
   parseGa4BodyMetadata,
   parseReportingPeriod,
@@ -73,7 +72,7 @@ export function createGa4Processor({ db, uploader, config, logger }) {
     const definition = reportMatches.length === 1 ? reportMatches[0] : null;
     const parsedPeriod = parseReportingPeriod(pdfText) || parseReportingPeriod(`${parsed.text} ${parsed.subject}`) ||
       previousCompleteCalendarMonth(parsed.date || message.internalDate);
-    const period = isCompleteCalendarMonth(parsedPeriod) ? parsedPeriod : null;
+    const period = parsedPeriod;
     const batchDate = formatBatchDate(period);
 
     let status = 'pending_review';
@@ -94,7 +93,7 @@ export function createGa4Processor({ db, uploader, config, logger }) {
       batchDate, reportingMonth: reportingMonthName(period), clientCode: route.clientCode
     }) : null;
     const generatedFilename = route && definition && period ? buildGa4Filename({
-      batchDate, clientCode: route.clientCode, propertyLabel: route.propertyLabel, reportLabel: definition.reportLabel
+      batchDate, clientCode: route.clientCode, reportLabel: definition.reportLabel
     }) : null;
 
     const baseRecord = {
